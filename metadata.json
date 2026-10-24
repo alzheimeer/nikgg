@@ -1,0 +1,8 @@
+{
+  "name": "Remix nikBrackets Pro v2",
+  "description": "Plataforma de gestión de torneos eSports basada en nikBrackets con motor DAG O(1) optimizado, sincronización WebSocket en tiempo real, caché Redis Read-Aside/Write-Behind, RBAC multi-rol, 2FA, analítica avanzada e integración con DeepSeek AI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

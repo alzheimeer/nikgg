@@ -1,0 +1,4952 @@
+{
+  "activeTournamentSlug": "copa-mundial-obf-2026-cpey",
+  "tournaments": {
+    "nexus-tekken8-masters": {
+      "version": "1.0",
+      "standard": "Open Bracket Format (OBF)",
+      "event": {
+        "id": "evt-nexus-tekken8-masters",
+        "organizationSlug": "nikbrackets-pro",
+        "tournamentSlug": "nexus-tekken8-masters",
+        "eventSlug": "nexus-tekken8-masters-main",
+        "name": "Nexus Grid Major 2026 — Tekken 8 World Tour (24 Pro Showcase)",
+        "date": "2026-10-23",
+        "gameName": "Tekken 8",
+        "gameSlug": "tekken8",
+        "format": "two_stage",
+        "numberEntrants": 24,
+        "guaranteedMinMatches": 3,
+        "venueFee": 25,
+        "entryFee": 25,
+        "prizePool": 50000
+      },
+      "entrants": [
+        {
+          "entrantID": "P1",
+          "entrantTag": "Niklauss#KR1",
+          "initialSeed": 1,
+          "eloRating": 2240,
+          "mainCharacter": "Sergei Dragunov",
+          "country": "CO",
+          "teamName": "Nexus Latam",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P2",
+          "entrantTag": "ArslanAsh#PK",
+          "initialSeed": 2,
+          "eloRating": 2215,
+          "mainCharacter": "Nina Williams",
+          "country": "PK",
+          "teamName": "Twisted Minds",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P3",
+          "entrantTag": "Knee#KR",
+          "initialSeed": 3,
+          "eloRating": 2190,
+          "mainCharacter": "Bryan Fury",
+          "country": "KR",
+          "teamName": "DRX",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P4",
+          "entrantTag": "MenaRD#DO",
+          "initialSeed": 4,
+          "eloRating": 2170,
+          "mainCharacter": "King",
+          "country": "DO",
+          "teamName": "Bandits",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P5",
+          "entrantTag": "Chikurin#JP",
+          "initialSeed": 5,
+          "eloRating": 2150,
+          "mainCharacter": "Lili Rochefort",
+          "country": "JP",
+          "teamName": "THY",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P6",
+          "entrantTag": "AtifButt#PK",
+          "initialSeed": 6,
+          "eloRating": 2135,
+          "mainCharacter": "Sergei Dragunov",
+          "country": "PK",
+          "teamName": "Falcons",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P7",
+          "entrantTag": "CBM#KR",
+          "initialSeed": 7,
+          "eloRating": 2115,
+          "mainCharacter": "Jin Kazama",
+          "country": "KR",
+          "teamName": "FearX",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P8",
+          "entrantTag": "Joka#UK",
+          "initialSeed": 8,
+          "eloRating": 2095,
+          "mainCharacter": "Heihachi Mishima",
+          "country": "GB",
+          "teamName": "MOUZ",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P9",
+          "entrantTag": "Ulsan#KR",
+          "initialSeed": 9,
+          "eloRating": 2080,
+          "mainCharacter": "Reina",
+          "country": "KR",
+          "teamName": "KDF",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P10",
+          "entrantTag": "Nobi#JP",
+          "initialSeed": 10,
+          "eloRating": 2065,
+          "mainCharacter": "Sergei Dragunov",
+          "country": "JP",
+          "teamName": "Team Yamasa",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P11",
+          "entrantTag": "Rangchu#KR",
+          "initialSeed": 11,
+          "eloRating": 2050,
+          "mainCharacter": "Kazuya Mishima",
+          "country": "KR",
+          "teamName": "Varrel",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P12",
+          "entrantTag": "Mulgold#KR",
+          "initialSeed": 12,
+          "eloRating": 2035,
+          "mainCharacter": "Clive Rosfield",
+          "country": "KR",
+          "teamName": "Falcon",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P13",
+          "entrantTag": "LowHigh#KR",
+          "initialSeed": 13,
+          "eloRating": 2020,
+          "mainCharacter": "Bryan Fury",
+          "country": "KR",
+          "teamName": "DRX",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P14",
+          "entrantTag": "AO#JP",
+          "initialSeed": 14,
+          "eloRating": 2005,
+          "mainCharacter": "Victor Chevalier",
+          "country": "JP",
+          "teamName": "GYogun",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P15",
+          "entrantTag": "Kkokkoma#KR",
+          "initialSeed": 15,
+          "eloRating": 1990,
+          "mainCharacter": "Sergei Dragunov",
+          "country": "KR",
+          "teamName": "Talon",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P16",
+          "entrantTag": "Yagami#AU",
+          "initialSeed": 16,
+          "eloRating": 1975,
+          "mainCharacter": "Reina",
+          "country": "AU",
+          "teamName": "Oceania FGC",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P17",
+          "entrantTag": "Shadow20z#US",
+          "initialSeed": 17,
+          "eloRating": 1960,
+          "mainCharacter": "Azucena",
+          "country": "US",
+          "teamName": "Liquid",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P18",
+          "entrantTag": "RunitBlack#US",
+          "initialSeed": 18,
+          "eloRating": 1945,
+          "mainCharacter": "Jin Kazama",
+          "country": "US",
+          "teamName": "SoCal",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P19",
+          "entrantTag": "Sephiblack#DE",
+          "initialSeed": 19,
+          "eloRating": 1930,
+          "mainCharacter": "Yoshimitsu",
+          "country": "DE",
+          "teamName": "BIG",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P20",
+          "entrantTag": "Jeondding#KR",
+          "initialSeed": 20,
+          "eloRating": 1915,
+          "mainCharacter": "King",
+          "country": "KR",
+          "teamName": "Vitality",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P21",
+          "entrantTag": "Keisuke#JP",
+          "initialSeed": 21,
+          "eloRating": 1900,
+          "mainCharacter": "Kazuya Mishima",
+          "country": "JP",
+          "teamName": "Fukuoka",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P22",
+          "entrantTag": "Double#JP",
+          "initialSeed": 22,
+          "eloRating": 1885,
+          "mainCharacter": "Nina Williams",
+          "country": "JP",
+          "teamName": "ZETA",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P23",
+          "entrantTag": "Farzeen#PK",
+          "initialSeed": 23,
+          "eloRating": 1870,
+          "mainCharacter": "Victor Chevalier",
+          "country": "PK",
+          "teamName": "Ashes",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P24",
+          "entrantTag": "AK#PH",
+          "initialSeed": 24,
+          "eloRating": 1855,
+          "mainCharacter": "Heihachi Mishima",
+          "country": "PH",
+          "teamName": "Navi",
+          "checkedIn": true
+        }
+      ],
+      "sets": [
+        {
+          "setID": "SW-R1-1",
+          "phase": "SWISS",
+          "round": 1,
+          "roundLabel": "Suiza R1 (1 vs 24)",
+          "bestOf": 3,
+          "entrant1ID": "P1",
+          "entrant2ID": "P24",
+          "entrant1Score": 2,
+          "entrant2Score": 0,
+          "status": "COMPLETED",
+          "winnerID": "P1",
+          "loserID": "P24",
+          "nextWinSetID": "SW-R2-1",
+          "nextLoseSetID": "SC-R1-1",
+          "nextWinSlot": 1,
+          "nextLoseSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-01",
+            "isStream": true,
+            "position3D": [
+              -19.5,
+              13.8,
+              1.8
+            ]
+          }
+        },
+        {
+          "setID": "SW-R1-2",
+          "phase": "SWISS",
+          "round": 1,
+          "roundLabel": "Suiza R1 (12 vs 13)",
+          "bestOf": 3,
+          "entrant1ID": "P12",
+          "entrant2ID": "P13",
+          "entrant1Score": 2,
+          "entrant2Score": 1,
+          "status": "COMPLETED",
+          "winnerID": "P12",
+          "loserID": "P13",
+          "nextWinSetID": "SW-R2-1",
+          "nextLoseSetID": "SC-R1-1",
+          "nextWinSlot": 2,
+          "nextLoseSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-02",
+            "isStream": false,
+            "position3D": [
+              -19.5,
+              11.4,
+              1.8
+            ]
+          }
+        },
+        {
+          "setID": "SW-R1-3",
+          "phase": "SWISS",
+          "round": 1,
+          "roundLabel": "Suiza R1 (8 vs 17)",
+          "bestOf": 3,
+          "entrant1ID": "P8",
+          "entrant2ID": "P17",
+          "entrant1Score": 2,
+          "entrant2Score": 0,
+          "status": "COMPLETED",
+          "winnerID": "P8",
+          "loserID": "P17",
+          "nextWinSetID": "SW-R2-2",
+          "nextLoseSetID": "SC-R1-2",
+          "nextWinSlot": 1,
+          "nextLoseSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-03",
+            "isStream": false,
+            "position3D": [
+              -19.5,
+              9,
+              1.8
+            ]
+          }
+        },
+        {
+          "setID": "SW-R1-4",
+          "phase": "SWISS",
+          "round": 1,
+          "roundLabel": "Suiza R1 (5 vs 20)",
+          "bestOf": 3,
+          "entrant1ID": "P5",
+          "entrant2ID": "P20",
+          "entrant1Score": 2,
+          "entrant2Score": 1,
+          "status": "COMPLETED",
+          "winnerID": "P5",
+          "loserID": "P20",
+          "nextWinSetID": "SW-R2-2",
+          "nextLoseSetID": "SC-R1-2",
+          "nextWinSlot": 2,
+          "nextLoseSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-04",
+            "isStream": false,
+            "position3D": [
+              -19.5,
+              6.6,
+              1.8
+            ]
+          }
+        },
+        {
+          "setID": "SW-R1-5",
+          "phase": "SWISS",
+          "round": 1,
+          "roundLabel": "Suiza R1 (4 vs 21)",
+          "bestOf": 3,
+          "entrant1ID": "P4",
+          "entrant2ID": "P21",
+          "entrant1Score": 2,
+          "entrant2Score": 0,
+          "status": "COMPLETED",
+          "winnerID": "P4",
+          "loserID": "P21",
+          "nextWinSetID": "SW-R2-3",
+          "nextLoseSetID": "SC-R1-3",
+          "nextWinSlot": 1,
+          "nextLoseSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-05",
+            "isStream": false,
+            "position3D": [
+              -19.5,
+              4.2,
+              1.8
+            ]
+          }
+        },
+        {
+          "setID": "SW-R1-6",
+          "phase": "SWISS",
+          "round": 1,
+          "roundLabel": "Suiza R1 (9 vs 16)",
+          "bestOf": 3,
+          "entrant1ID": "P9",
+          "entrant2ID": "P16",
+          "entrant1Score": 1,
+          "entrant2Score": 2,
+          "status": "COMPLETED",
+          "winnerID": "P16",
+          "loserID": "P9",
+          "nextWinSetID": "SW-R2-3",
+          "nextLoseSetID": "SC-R1-3",
+          "nextWinSlot": 2,
+          "nextLoseSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-06",
+            "isStream": false,
+            "position3D": [
+              -19.5,
+              1.8,
+              1.8
+            ]
+          }
+        },
+        {
+          "setID": "SW-R1-7",
+          "phase": "SWISS",
+          "round": 1,
+          "roundLabel": "Suiza R1 (2 vs 23)",
+          "bestOf": 3,
+          "entrant1ID": "P2",
+          "entrant2ID": "P23",
+          "entrant1Score": 2,
+          "entrant2Score": 0,
+          "status": "COMPLETED",
+          "winnerID": "P2",
+          "loserID": "P23",
+          "nextWinSetID": "SW-R2-4",
+          "nextLoseSetID": "SC-R1-4",
+          "nextWinSlot": 1,
+          "nextLoseSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-01",
+            "isStream": true,
+            "position3D": [
+              -13.8,
+              13.8,
+              1
+            ]
+          }
+        },
+        {
+          "setID": "SW-R1-8",
+          "phase": "SWISS",
+          "round": 1,
+          "roundLabel": "Suiza R1 (11 vs 14)",
+          "bestOf": 3,
+          "entrant1ID": "P11",
+          "entrant2ID": "P14",
+          "entrant1Score": 2,
+          "entrant2Score": 1,
+          "status": "COMPLETED",
+          "winnerID": "P11",
+          "loserID": "P14",
+          "nextWinSetID": "SW-R2-4",
+          "nextLoseSetID": "SC-R1-4",
+          "nextWinSlot": 2,
+          "nextLoseSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-02",
+            "isStream": false,
+            "position3D": [
+              -13.8,
+              11.4,
+              1
+            ]
+          }
+        },
+        {
+          "setID": "SW-R1-9",
+          "phase": "SWISS",
+          "round": 1,
+          "roundLabel": "Suiza R1 (7 vs 18)",
+          "bestOf": 3,
+          "entrant1ID": "P7",
+          "entrant2ID": "P18",
+          "entrant1Score": 2,
+          "entrant2Score": 1,
+          "status": "COMPLETED",
+          "winnerID": "P7",
+          "loserID": "P18",
+          "nextWinSetID": "SW-R2-5",
+          "nextLoseSetID": "SC-R1-5",
+          "nextWinSlot": 1,
+          "nextLoseSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-03",
+            "isStream": false,
+            "position3D": [
+              -13.8,
+              9,
+              1
+            ]
+          }
+        },
+        {
+          "setID": "SW-R1-10",
+          "phase": "SWISS",
+          "round": 1,
+          "roundLabel": "Suiza R1 (6 vs 19)",
+          "bestOf": 3,
+          "entrant1ID": "P6",
+          "entrant2ID": "P19",
+          "entrant1Score": 0,
+          "entrant2Score": 2,
+          "status": "COMPLETED",
+          "winnerID": "P19",
+          "loserID": "P6",
+          "nextWinSetID": "SW-R2-5",
+          "nextLoseSetID": "SC-R1-5",
+          "nextWinSlot": 2,
+          "nextLoseSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-04",
+            "isStream": false,
+            "position3D": [
+              -13.8,
+              6.6,
+              1
+            ]
+          }
+        },
+        {
+          "setID": "SW-R1-11",
+          "phase": "SWISS",
+          "round": 1,
+          "roundLabel": "Suiza R1 (3 vs 22)",
+          "bestOf": 3,
+          "entrant1ID": "P3",
+          "entrant2ID": "P22",
+          "entrant1Score": 2,
+          "entrant2Score": 0,
+          "status": "COMPLETED",
+          "winnerID": "P3",
+          "loserID": "P22",
+          "nextWinSetID": "SW-R2-6",
+          "nextLoseSetID": "SC-R1-6",
+          "nextWinSlot": 1,
+          "nextLoseSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-05",
+            "isStream": false,
+            "position3D": [
+              -13.8,
+              4.2,
+              1
+            ]
+          }
+        },
+        {
+          "setID": "SW-R1-12",
+          "phase": "SWISS",
+          "round": 1,
+          "roundLabel": "Suiza R1 (10 vs 15)",
+          "bestOf": 3,
+          "entrant1ID": "P10",
+          "entrant2ID": "P15",
+          "entrant1Score": 2,
+          "entrant2Score": 1,
+          "status": "COMPLETED",
+          "winnerID": "P10",
+          "loserID": "P15",
+          "nextWinSetID": "SW-R2-6",
+          "nextLoseSetID": "SC-R1-6",
+          "nextWinSlot": 2,
+          "nextLoseSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-06",
+            "isStream": false,
+            "position3D": [
+              -13.8,
+              1.8,
+              1
+            ]
+          }
+        },
+        {
+          "setID": "SW-R2-1",
+          "phase": "SWISS",
+          "round": 2,
+          "roundLabel": "Suiza R2 (1-0 #1)",
+          "bestOf": 3,
+          "entrant1ID": "P1",
+          "entrant2ID": "P12",
+          "entrant1Score": 2,
+          "entrant2Score": 1,
+          "status": "COMPLETED",
+          "winnerID": "P1",
+          "loserID": "P12",
+          "nextWinSetID": "W-QF-1",
+          "nextLoseSetID": "L-R1-1",
+          "nextWinSlot": 1,
+          "nextLoseSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-01",
+            "isStream": true,
+            "position3D": [
+              -7.8,
+              13.8,
+              0.4
+            ]
+          }
+        },
+        {
+          "setID": "SW-R2-2",
+          "phase": "SWISS",
+          "round": 2,
+          "roundLabel": "Suiza R2 (1-0 #2)",
+          "bestOf": 3,
+          "entrant1ID": "P8",
+          "entrant2ID": "P5",
+          "entrant1Score": 2,
+          "entrant2Score": 0,
+          "status": "COMPLETED",
+          "winnerID": "P8",
+          "loserID": "P5",
+          "nextWinSetID": "W-QF-1",
+          "nextLoseSetID": "L-R1-1",
+          "nextWinSlot": 2,
+          "nextLoseSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-02",
+            "isStream": false,
+            "position3D": [
+              -7.8,
+              11.4,
+              0.4
+            ]
+          }
+        },
+        {
+          "setID": "SW-R2-3",
+          "phase": "SWISS",
+          "round": 2,
+          "roundLabel": "Suiza R2 (1-0 #3)",
+          "bestOf": 3,
+          "entrant1ID": "P4",
+          "entrant2ID": "P16",
+          "entrant1Score": 2,
+          "entrant2Score": 1,
+          "status": "COMPLETED",
+          "winnerID": "P4",
+          "loserID": "P16",
+          "nextWinSetID": "W-QF-2",
+          "nextLoseSetID": "L-R1-2",
+          "nextWinSlot": 1,
+          "nextLoseSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-03",
+            "isStream": false,
+            "position3D": [
+              -7.8,
+              9,
+              0.4
+            ]
+          }
+        },
+        {
+          "setID": "SW-R2-4",
+          "phase": "SWISS",
+          "round": 2,
+          "roundLabel": "Suiza R2 (1-0 #4)",
+          "bestOf": 3,
+          "entrant1ID": "P2",
+          "entrant2ID": "P11",
+          "entrant1Score": 1,
+          "entrant2Score": 2,
+          "status": "COMPLETED",
+          "winnerID": "P11",
+          "loserID": "P2",
+          "nextWinSetID": "W-QF-2",
+          "nextLoseSetID": "L-R1-2",
+          "nextWinSlot": 2,
+          "nextLoseSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-04",
+            "isStream": false,
+            "position3D": [
+              -7.8,
+              6.6,
+              0.4
+            ]
+          }
+        },
+        {
+          "setID": "SW-R2-5",
+          "phase": "SWISS",
+          "round": 2,
+          "roundLabel": "Suiza R2 (1-0 #5)",
+          "bestOf": 3,
+          "entrant1ID": "P7",
+          "entrant2ID": "P19",
+          "entrant1Score": 2,
+          "entrant2Score": 1,
+          "status": "COMPLETED",
+          "winnerID": "P7",
+          "loserID": "P19",
+          "nextWinSetID": "W-SF-2",
+          "nextLoseSetID": "L-R1-3",
+          "nextWinSlot": 1,
+          "nextLoseSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-05",
+            "isStream": false,
+            "position3D": [
+              -7.8,
+              4.2,
+              0.4
+            ]
+          }
+        },
+        {
+          "setID": "SW-R2-6",
+          "phase": "SWISS",
+          "round": 2,
+          "roundLabel": "Suiza R2 (1-0 #6)",
+          "bestOf": 3,
+          "entrant1ID": "P3",
+          "entrant2ID": "P10",
+          "entrant1Score": 1,
+          "entrant2Score": 1,
+          "status": "IN_PROGRESS",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "W-SF-2",
+          "nextLoseSetID": "L-R1-3",
+          "nextWinSlot": 2,
+          "nextLoseSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-06",
+            "isStream": false,
+            "position3D": [
+              -7.8,
+              1.8,
+              0.4
+            ]
+          }
+        },
+        {
+          "setID": "W-QF-1",
+          "phase": "WINNERS",
+          "round": 3,
+          "roundLabel": "Winners Cuartos A",
+          "bestOf": 3,
+          "entrant1ID": "P1",
+          "entrant2ID": "P8",
+          "entrant1Score": 2,
+          "entrant2Score": 1,
+          "status": "COMPLETED",
+          "winnerID": "P1",
+          "loserID": "P8",
+          "nextWinSetID": "W-SF-1",
+          "nextLoseSetID": "L-R2-1",
+          "nextWinSlot": 1,
+          "nextLoseSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-01",
+            "isStream": true,
+            "position3D": [
+              -1.4,
+              11.6,
+              0
+            ]
+          }
+        },
+        {
+          "setID": "W-QF-2",
+          "phase": "WINNERS",
+          "round": 3,
+          "roundLabel": "Winners Cuartos B",
+          "bestOf": 3,
+          "entrant1ID": "P4",
+          "entrant2ID": "P11",
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "READY",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "W-SF-1",
+          "nextLoseSetID": "L-R2-2",
+          "nextWinSlot": 2,
+          "nextLoseSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.883Z",
+          "other": {
+            "station": "EST-02",
+            "isStream": false,
+            "position3D": [
+              -1.4,
+              6.2,
+              0
+            ]
+          }
+        },
+        {
+          "setID": "W-SF-1",
+          "phase": "WINNERS",
+          "round": 4,
+          "roundLabel": "Winners Semifinal 1",
+          "bestOf": 3,
+          "entrant1ID": "P1",
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "W-FIN",
+          "nextLoseSetID": "L-SF-1",
+          "nextWinSlot": 1,
+          "nextLoseSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.883Z",
+          "other": {
+            "station": "EST-01",
+            "isStream": true,
+            "position3D": [
+              6.4,
+              11,
+              0
+            ]
+          }
+        },
+        {
+          "setID": "W-SF-2",
+          "phase": "WINNERS",
+          "round": 4,
+          "roundLabel": "Winners Semifinal 2",
+          "bestOf": 3,
+          "entrant1ID": "P7",
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "W-FIN",
+          "nextLoseSetID": "L-SF-1",
+          "nextWinSlot": 2,
+          "nextLoseSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.883Z",
+          "other": {
+            "station": "EST-02",
+            "isStream": true,
+            "position3D": [
+              6.4,
+              5.4,
+              0
+            ]
+          }
+        },
+        {
+          "setID": "W-FIN",
+          "phase": "WINNERS",
+          "round": 5,
+          "roundLabel": "Winners Final",
+          "bestOf": 5,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "GF-1",
+          "nextLoseSetID": "L-FIN",
+          "nextWinSlot": 1,
+          "nextLoseSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.883Z",
+          "other": {
+            "station": "STAGE-MAIN",
+            "isStream": true,
+            "position3D": [
+              14.2,
+              8.2,
+              0
+            ]
+          }
+        },
+        {
+          "setID": "L-R1-1",
+          "phase": "LOSERS",
+          "round": 3,
+          "roundLabel": "Losers R1-A",
+          "bestOf": 3,
+          "entrant1ID": "P12",
+          "entrant2ID": "P5",
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "READY",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "L-R2-1",
+          "nextLoseSetID": null,
+          "nextWinSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.883Z",
+          "other": {
+            "station": "EST-03",
+            "isStream": false,
+            "position3D": [
+              -1.4,
+              -2.4,
+              -2.6
+            ]
+          }
+        },
+        {
+          "setID": "L-R1-2",
+          "phase": "LOSERS",
+          "round": 3,
+          "roundLabel": "Losers R1-B",
+          "bestOf": 3,
+          "entrant1ID": "P16",
+          "entrant2ID": "P2",
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "READY",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "L-R2-2",
+          "nextLoseSetID": null,
+          "nextWinSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.883Z",
+          "other": {
+            "station": "EST-04",
+            "isStream": false,
+            "position3D": [
+              -1.4,
+              -5,
+              -2.6
+            ]
+          }
+        },
+        {
+          "setID": "L-R1-3",
+          "phase": "LOSERS",
+          "round": 3,
+          "roundLabel": "Losers R1-C",
+          "bestOf": 3,
+          "entrant1ID": "P19",
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "L-SF-2",
+          "nextLoseSetID": null,
+          "nextWinSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.883Z",
+          "other": {
+            "station": "EST-05",
+            "isStream": false,
+            "position3D": [
+              -1.4,
+              -7.6,
+              -2.6
+            ]
+          }
+        },
+        {
+          "setID": "L-R2-1",
+          "phase": "LOSERS",
+          "round": 4,
+          "roundLabel": "Losers R2 Top 8 A",
+          "bestOf": 3,
+          "entrant1ID": null,
+          "entrant2ID": "P8",
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "L-SF-2",
+          "nextLoseSetID": null,
+          "nextWinSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.883Z",
+          "other": {
+            "station": "EST-03",
+            "isStream": false,
+            "position3D": [
+              4.8,
+              -3.4,
+              -2.6
+            ]
+          }
+        },
+        {
+          "setID": "L-R2-2",
+          "phase": "LOSERS",
+          "round": 4,
+          "roundLabel": "Losers R2 Top 8 B",
+          "bestOf": 3,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "L-FIN",
+          "nextLoseSetID": null,
+          "nextWinSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.883Z",
+          "other": {
+            "station": "EST-04",
+            "isStream": false,
+            "position3D": [
+              4.8,
+              -6.4,
+              -2.6
+            ]
+          }
+        },
+        {
+          "setID": "L-SF-1",
+          "phase": "LOSERS",
+          "round": 5,
+          "roundLabel": "Losers Semifinal A",
+          "bestOf": 3,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "L-FIN",
+          "nextLoseSetID": null,
+          "nextWinSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.883Z",
+          "other": {
+            "station": "EST-02",
+            "isStream": false,
+            "position3D": [
+              11,
+              -3,
+              -2.6
+            ]
+          }
+        },
+        {
+          "setID": "L-SF-2",
+          "phase": "LOSERS",
+          "round": 5,
+          "roundLabel": "Losers Semifinal B",
+          "bestOf": 3,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "L-SF-1",
+          "nextLoseSetID": null,
+          "nextWinSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.883Z",
+          "other": {
+            "station": "EST-03",
+            "isStream": false,
+            "position3D": [
+              11,
+              -6.2,
+              -2.6
+            ]
+          }
+        },
+        {
+          "setID": "L-FIN",
+          "phase": "LOSERS",
+          "round": 6,
+          "roundLabel": "Losers Final",
+          "bestOf": 5,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "GF-1",
+          "nextLoseSetID": null,
+          "nextWinSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.883Z",
+          "other": {
+            "station": "STAGE-MAIN",
+            "isStream": true,
+            "position3D": [
+              17.2,
+              -4.6,
+              -2
+            ]
+          }
+        },
+        {
+          "setID": "SC-R1-1",
+          "phase": "SECOND_CHANCE",
+          "round": 2,
+          "roundLabel": "2nd Chance R1-1",
+          "bestOf": 3,
+          "entrant1ID": "P24",
+          "entrant2ID": "P13",
+          "entrant1Score": 2,
+          "entrant2Score": 0,
+          "status": "COMPLETED",
+          "winnerID": "P24",
+          "loserID": "P13",
+          "nextWinSetID": "SC-QF-1",
+          "nextLoseSetID": null,
+          "nextWinSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-01",
+            "isStream": false,
+            "position3D": [
+              -13.8,
+              -11.4,
+              1.6
+            ]
+          }
+        },
+        {
+          "setID": "SC-R1-2",
+          "phase": "SECOND_CHANCE",
+          "round": 2,
+          "roundLabel": "2nd Chance R1-2",
+          "bestOf": 3,
+          "entrant1ID": "P17",
+          "entrant2ID": "P20",
+          "entrant1Score": 1,
+          "entrant2Score": 2,
+          "status": "COMPLETED",
+          "winnerID": "P20",
+          "loserID": "P17",
+          "nextWinSetID": "SC-QF-1",
+          "nextLoseSetID": null,
+          "nextWinSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-02",
+            "isStream": false,
+            "position3D": [
+              -13.8,
+              -14,
+              1.6
+            ]
+          }
+        },
+        {
+          "setID": "SC-R1-3",
+          "phase": "SECOND_CHANCE",
+          "round": 2,
+          "roundLabel": "2nd Chance R1-3",
+          "bestOf": 3,
+          "entrant1ID": "P21",
+          "entrant2ID": "P9",
+          "entrant1Score": 2,
+          "entrant2Score": 1,
+          "status": "COMPLETED",
+          "winnerID": "P21",
+          "loserID": "P9",
+          "nextWinSetID": "SC-QF-2",
+          "nextLoseSetID": null,
+          "nextWinSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-03",
+            "isStream": false,
+            "position3D": [
+              -13.8,
+              -16.6,
+              1.6
+            ]
+          }
+        },
+        {
+          "setID": "SC-R1-4",
+          "phase": "SECOND_CHANCE",
+          "round": 2,
+          "roundLabel": "2nd Chance R1-4",
+          "bestOf": 3,
+          "entrant1ID": "P23",
+          "entrant2ID": "P14",
+          "entrant1Score": 2,
+          "entrant2Score": 0,
+          "status": "COMPLETED",
+          "winnerID": "P23",
+          "loserID": "P14",
+          "nextWinSetID": "SC-QF-2",
+          "nextLoseSetID": null,
+          "nextWinSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-04",
+            "isStream": false,
+            "position3D": [
+              -7.8,
+              -11.4,
+              1.6
+            ]
+          }
+        },
+        {
+          "setID": "SC-R1-5",
+          "phase": "SECOND_CHANCE",
+          "round": 2,
+          "roundLabel": "2nd Chance R1-5",
+          "bestOf": 3,
+          "entrant1ID": "P18",
+          "entrant2ID": "P6",
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "READY",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "SC-QF-3",
+          "nextLoseSetID": null,
+          "nextWinSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.883Z",
+          "other": {
+            "station": "EST-05",
+            "isStream": false,
+            "position3D": [
+              -7.8,
+              -14,
+              1.6
+            ]
+          }
+        },
+        {
+          "setID": "SC-R1-6",
+          "phase": "SECOND_CHANCE",
+          "round": 2,
+          "roundLabel": "2nd Chance R1-6",
+          "bestOf": 3,
+          "entrant1ID": "P22",
+          "entrant2ID": "P15",
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "READY",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "SC-QF-3",
+          "nextLoseSetID": null,
+          "nextWinSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.883Z",
+          "other": {
+            "station": "EST-06",
+            "isStream": false,
+            "position3D": [
+              -7.8,
+              -16.6,
+              1.6
+            ]
+          }
+        },
+        {
+          "setID": "SC-QF-1",
+          "phase": "SECOND_CHANCE",
+          "round": 3,
+          "roundLabel": "2nd Chance Cuartos 1",
+          "bestOf": 3,
+          "entrant1ID": "P24",
+          "entrant2ID": "P20",
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "READY",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "SC-SF-1",
+          "nextLoseSetID": null,
+          "nextWinSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.883Z",
+          "other": {
+            "station": "EST-05",
+            "isStream": false,
+            "position3D": [
+              -1.4,
+              -11.4,
+              1.6
+            ]
+          }
+        },
+        {
+          "setID": "SC-QF-2",
+          "phase": "SECOND_CHANCE",
+          "round": 3,
+          "roundLabel": "2nd Chance Cuartos 2",
+          "bestOf": 3,
+          "entrant1ID": "P21",
+          "entrant2ID": "P23",
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "READY",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "SC-SF-1",
+          "nextLoseSetID": null,
+          "nextWinSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.883Z",
+          "other": {
+            "station": "EST-06",
+            "isStream": false,
+            "position3D": [
+              -1.4,
+              -14,
+              1.6
+            ]
+          }
+        },
+        {
+          "setID": "SC-QF-3",
+          "phase": "SECOND_CHANCE",
+          "round": 3,
+          "roundLabel": "2nd Chance Cuartos 3",
+          "bestOf": 3,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "SC-FIN",
+          "nextLoseSetID": null,
+          "nextWinSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.883Z",
+          "other": {
+            "station": "EST-05",
+            "isStream": false,
+            "position3D": [
+              -1.4,
+              -16.6,
+              1.6
+            ]
+          }
+        },
+        {
+          "setID": "SC-SF-1",
+          "phase": "SECOND_CHANCE",
+          "round": 4,
+          "roundLabel": "2nd Chance Semifinal",
+          "bestOf": 3,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "SC-FIN",
+          "nextLoseSetID": null,
+          "nextWinSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.883Z",
+          "other": {
+            "station": "EST-05",
+            "isStream": false,
+            "position3D": [
+              6.4,
+              -13,
+              1.6
+            ]
+          }
+        },
+        {
+          "setID": "SC-FIN",
+          "phase": "SECOND_CHANCE",
+          "round": 5,
+          "roundLabel": "Second Chance Final (24P)",
+          "bestOf": 3,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": null,
+          "nextLoseSetID": null,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.883Z",
+          "other": {
+            "station": "EST-05",
+            "isStream": true,
+            "position3D": [
+              14.2,
+              -13,
+              1.6
+            ]
+          }
+        },
+        {
+          "setID": "GF-1",
+          "phase": "GRAND_FINAL",
+          "round": 7,
+          "roundLabel": "Grand Final (24P Two-Stage)",
+          "bestOf": 5,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "GF-RESET",
+          "nextLoseSetID": null,
+          "nextWinSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.883Z",
+          "other": {
+            "station": "STAGE-MAIN",
+            "isStream": true,
+            "position3D": [
+              22.4,
+              2.2,
+              0.8
+            ]
+          }
+        },
+        {
+          "setID": "GF-RESET",
+          "phase": "GRAND_FINAL_RESET",
+          "round": 8,
+          "roundLabel": "Grand Final Reset",
+          "bestOf": 5,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": null,
+          "nextLoseSetID": null,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.883Z",
+          "other": {
+            "station": "STAGE-MAIN",
+            "isStream": true,
+            "position3D": [
+              28.4,
+              2.2,
+              0.8
+            ]
+          }
+        }
+      ]
+    },
+    "capcom-pro-sf6-latam": {
+      "version": "1.0",
+      "standard": "Open Bracket Format (OBF)",
+      "event": {
+        "id": "evt-capcom-pro-sf6-latam",
+        "organizationSlug": "nikbrackets-pro",
+        "tournamentSlug": "capcom-pro-sf6-latam",
+        "eventSlug": "capcom-pro-sf6-latam-main",
+        "name": "Premiere Latam 2026 — Street Fighter 6",
+        "date": "2026-10-23",
+        "gameName": "Street Fighter 6",
+        "gameSlug": "sf6",
+        "format": "double_elimination",
+        "numberEntrants": 8,
+        "guaranteedMinMatches": 3,
+        "venueFee": 25,
+        "entryFee": 25,
+        "prizePool": 30000
+      },
+      "entrants": [
+        {
+          "entrantID": "SF1",
+          "entrantTag": "PunkDaGod#US",
+          "initialSeed": 1,
+          "eloRating": 2210,
+          "mainCharacter": "Cammy",
+          "country": "US",
+          "teamName": "FlyQuest",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "SF2",
+          "entrantTag": "AngryBird#AE",
+          "initialSeed": 2,
+          "eloRating": 2175,
+          "mainCharacter": "Ken Masters",
+          "country": "AE",
+          "teamName": "NASR",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "SF3",
+          "entrantTag": "Tokido#JP",
+          "initialSeed": 3,
+          "eloRating": 2140,
+          "mainCharacter": "Akuma",
+          "country": "JP",
+          "teamName": "REJECT",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "SF4",
+          "entrantTag": "Xiaohai#CN",
+          "initialSeed": 4,
+          "eloRating": 2130,
+          "mainCharacter": "M. Bison",
+          "country": "CN",
+          "teamName": "KSG",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "SF5",
+          "entrantTag": "BigBird#AE",
+          "initialSeed": 5,
+          "eloRating": 2080,
+          "mainCharacter": "Rashid",
+          "country": "AE",
+          "teamName": "RedBull",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "SF6",
+          "entrantTag": "Leshar#KR",
+          "initialSeed": 6,
+          "eloRating": 2060,
+          "mainCharacter": "Ed",
+          "country": "KR",
+          "teamName": "DRX",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "SF7",
+          "entrantTag": "EndingWalker#UK",
+          "initialSeed": 7,
+          "eloRating": 2020,
+          "mainCharacter": "Terry Bogard",
+          "country": "GB",
+          "teamName": "MOUZ",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "SF8",
+          "entrantTag": "Niklauss#KR1",
+          "initialSeed": 8,
+          "eloRating": 1995,
+          "mainCharacter": "Luke",
+          "country": "CO",
+          "teamName": "Nexus Latam",
+          "checkedIn": true
+        }
+      ],
+      "sets": [
+        {
+          "setID": "DE-WQF1",
+          "phase": "WINNERS",
+          "round": 1,
+          "roundLabel": "Winners Cuartos 1",
+          "bestOf": 3,
+          "entrant1ID": "SF1",
+          "entrant2ID": "SF8",
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "READY",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "DE-WSF1",
+          "nextLoseSetID": "DE-LR1-1",
+          "nextWinSlot": 1,
+          "nextLoseSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-01",
+            "isStream": true,
+            "position3D": [
+              -10.5,
+              9,
+              0
+            ]
+          }
+        },
+        {
+          "setID": "DE-WQF2",
+          "phase": "WINNERS",
+          "round": 1,
+          "roundLabel": "Winners Cuartos 2",
+          "bestOf": 3,
+          "entrant1ID": "SF4",
+          "entrant2ID": "SF5",
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "READY",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "DE-WSF1",
+          "nextLoseSetID": "DE-LR1-1",
+          "nextWinSlot": 2,
+          "nextLoseSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-02",
+            "isStream": false,
+            "position3D": [
+              -10.5,
+              6.6,
+              0
+            ]
+          }
+        },
+        {
+          "setID": "DE-WQF3",
+          "phase": "WINNERS",
+          "round": 1,
+          "roundLabel": "Winners Cuartos 3",
+          "bestOf": 3,
+          "entrant1ID": "SF2",
+          "entrant2ID": "SF7",
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "READY",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "DE-WSF2",
+          "nextLoseSetID": "DE-LR1-2",
+          "nextWinSlot": 1,
+          "nextLoseSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-03",
+            "isStream": false,
+            "position3D": [
+              -10.5,
+              4.2,
+              0
+            ]
+          }
+        },
+        {
+          "setID": "DE-WQF4",
+          "phase": "WINNERS",
+          "round": 1,
+          "roundLabel": "Winners Cuartos 4",
+          "bestOf": 3,
+          "entrant1ID": "SF3",
+          "entrant2ID": "SF6",
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "READY",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "DE-WSF2",
+          "nextLoseSetID": "DE-LR1-2",
+          "nextWinSlot": 2,
+          "nextLoseSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-04",
+            "isStream": false,
+            "position3D": [
+              -10.5,
+              1.8,
+              0
+            ]
+          }
+        },
+        {
+          "setID": "DE-WSF1",
+          "phase": "WINNERS",
+          "round": 2,
+          "roundLabel": "Winners Semifinal A",
+          "bestOf": 3,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "DE-WF",
+          "nextLoseSetID": "DE-LR2-1",
+          "nextWinSlot": 1,
+          "nextLoseSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-01",
+            "isStream": true,
+            "position3D": [
+              -2.5,
+              7.8,
+              0
+            ]
+          }
+        },
+        {
+          "setID": "DE-WSF2",
+          "phase": "WINNERS",
+          "round": 2,
+          "roundLabel": "Winners Semifinal B",
+          "bestOf": 3,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "DE-WF",
+          "nextLoseSetID": "DE-LR2-2",
+          "nextWinSlot": 2,
+          "nextLoseSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-02",
+            "isStream": false,
+            "position3D": [
+              -2.5,
+              3,
+              0
+            ]
+          }
+        },
+        {
+          "setID": "DE-WF",
+          "phase": "WINNERS",
+          "round": 3,
+          "roundLabel": "Winners Final",
+          "bestOf": 5,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "DE-GF",
+          "nextLoseSetID": "DE-LF",
+          "nextWinSlot": 1,
+          "nextLoseSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-01",
+            "isStream": true,
+            "position3D": [
+              5.5,
+              5.4,
+              0
+            ]
+          }
+        },
+        {
+          "setID": "DE-LR1-1",
+          "phase": "LOSERS",
+          "round": 1,
+          "roundLabel": "Losers Ronda 1A",
+          "bestOf": 3,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "DE-LR2-1",
+          "nextLoseSetID": null,
+          "nextWinSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-05",
+            "isStream": false,
+            "position3D": [
+              -6.5,
+              -2.6,
+              -2.6
+            ]
+          }
+        },
+        {
+          "setID": "DE-LR1-2",
+          "phase": "LOSERS",
+          "round": 1,
+          "roundLabel": "Losers Ronda 1B",
+          "bestOf": 3,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "DE-LR2-2",
+          "nextLoseSetID": null,
+          "nextWinSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-06",
+            "isStream": false,
+            "position3D": [
+              -6.5,
+              -5.2,
+              -2.6
+            ]
+          }
+        },
+        {
+          "setID": "DE-LR2-1",
+          "phase": "LOSERS",
+          "round": 2,
+          "roundLabel": "Losers Ronda 2A",
+          "bestOf": 3,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "DE-LSF",
+          "nextLoseSetID": null,
+          "nextWinSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-05",
+            "isStream": false,
+            "position3D": [
+              -0.5,
+              -6.2,
+              -2.6
+            ]
+          }
+        },
+        {
+          "setID": "DE-LR2-2",
+          "phase": "LOSERS",
+          "round": 2,
+          "roundLabel": "Losers Ronda 2B",
+          "bestOf": 3,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "DE-LSF",
+          "nextLoseSetID": null,
+          "nextWinSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-06",
+            "isStream": false,
+            "position3D": [
+              -0.5,
+              -8.8,
+              -2.6
+            ]
+          }
+        },
+        {
+          "setID": "DE-LSF",
+          "phase": "LOSERS",
+          "round": 3,
+          "roundLabel": "Losers Semifinal (R3)",
+          "bestOf": 3,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "DE-LF",
+          "nextLoseSetID": null,
+          "nextWinSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-03",
+            "isStream": false,
+            "position3D": [
+              5.5,
+              -9.8,
+              -2.6
+            ]
+          }
+        },
+        {
+          "setID": "DE-LF",
+          "phase": "LOSERS",
+          "round": 4,
+          "roundLabel": "Losers Final",
+          "bestOf": 5,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "DE-GF",
+          "nextLoseSetID": null,
+          "nextWinSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "EST-02",
+            "isStream": true,
+            "position3D": [
+              11.5,
+              -5.8,
+              -2
+            ]
+          }
+        },
+        {
+          "setID": "DE-GF",
+          "phase": "GRAND_FINAL",
+          "round": 5,
+          "roundLabel": "Grand Final",
+          "bestOf": 5,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "DE-GF-RESET",
+          "nextLoseSetID": null,
+          "nextWinSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "STAGE-MAIN",
+            "isStream": true,
+            "position3D": [
+              17.5,
+              1.2,
+              0.8
+            ]
+          }
+        },
+        {
+          "setID": "DE-GF-RESET",
+          "phase": "GRAND_FINAL_RESET",
+          "round": 6,
+          "roundLabel": "Grand Final Reset",
+          "bestOf": 5,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": null,
+          "nextLoseSetID": null,
+          "games": [],
+          "updatedAt": "2026-10-23T00:39:20.884Z",
+          "other": {
+            "station": "STAGE-MAIN",
+            "isStream": true,
+            "position3D": [
+              23.5,
+              1.2,
+              0.8
+            ]
+          }
+        }
+      ]
+    },
+    "copa-mundial-obf-2026-cpey": {
+      "version": "1.0",
+      "standard": "Open Bracket Format (OBF)",
+      "event": {
+        "id": "evt-copa-mundial-obf-2026-cpey",
+        "organizationSlug": "nikbrackets-pro",
+        "tournamentSlug": "copa-mundial-obf-2026-cpey",
+        "eventSlug": "copa-mundial-obf-2026-cpey-main",
+        "name": "Copa Mundial OBF 2026",
+        "date": "2026-10-23",
+        "gameName": "Tekken 8",
+        "gameSlug": "tekken8",
+        "format": "double_elimination",
+        "numberEntrants": 32,
+        "guaranteedMinMatches": 3,
+        "venueFee": 25,
+        "entryFee": 25,
+        "prizePool": 25000
+      },
+      "entrants": [
+        {
+          "entrantID": "P1",
+          "entrantTag": "Niklauss#KR1",
+          "initialSeed": 1,
+          "eloRating": 2185,
+          "mainCharacter": "Sergei Dragunov",
+          "country": "CO",
+          "teamName": "Nexus Latam",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P2",
+          "entrantTag": "ArslanAsh#PK",
+          "initialSeed": 2,
+          "eloRating": 2150,
+          "mainCharacter": "Reina",
+          "country": "PK",
+          "teamName": "Twisted Minds",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P3",
+          "entrantTag": "Knee#KR",
+          "initialSeed": 3,
+          "eloRating": 2120,
+          "mainCharacter": "Kazuya Mishima",
+          "country": "KR",
+          "teamName": "DRX",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P4",
+          "entrantTag": "MenaRD#DO",
+          "initialSeed": 4,
+          "eloRating": 2095,
+          "mainCharacter": "King",
+          "country": "DO",
+          "teamName": "Bandits",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P5",
+          "entrantTag": "Chikurin#JP",
+          "initialSeed": 5,
+          "eloRating": 2050,
+          "mainCharacter": "Jin Kazama",
+          "country": "JP",
+          "teamName": "THY",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P6",
+          "entrantTag": "AtifButt#PK",
+          "initialSeed": 6,
+          "eloRating": 2025,
+          "mainCharacter": "Sergei Dragunov",
+          "country": "PK",
+          "teamName": "Falcons",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P7",
+          "entrantTag": "CBM#KR",
+          "initialSeed": 7,
+          "eloRating": 1985,
+          "mainCharacter": "Jin Kazama",
+          "country": "KR",
+          "teamName": "FearX",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P8",
+          "entrantTag": "Joka#UK",
+          "initialSeed": 8,
+          "eloRating": 1950,
+          "mainCharacter": "Heihachi Mishima",
+          "country": "GB",
+          "teamName": "MOUZ",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P9",
+          "entrantTag": "Challenger_9#LATAM",
+          "initialSeed": 9,
+          "eloRating": 1776,
+          "mainCharacter": "Sergei Dragunov",
+          "country": "CO",
+          "teamName": "Open Qualifier",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P10",
+          "entrantTag": "Challenger_10#LATAM",
+          "initialSeed": 10,
+          "eloRating": 1758,
+          "mainCharacter": "Reina",
+          "country": "MX",
+          "teamName": "Open Qualifier",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P11",
+          "entrantTag": "Challenger_11#LATAM",
+          "initialSeed": 11,
+          "eloRating": 1740,
+          "mainCharacter": "Kazuya Mishima",
+          "country": "CL",
+          "teamName": "Open Qualifier",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P12",
+          "entrantTag": "Challenger_12#LATAM",
+          "initialSeed": 12,
+          "eloRating": 1722,
+          "mainCharacter": "King",
+          "country": "AR",
+          "teamName": "Open Qualifier",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P13",
+          "entrantTag": "Challenger_13#LATAM",
+          "initialSeed": 13,
+          "eloRating": 1704,
+          "mainCharacter": "Jin Kazama",
+          "country": "BR",
+          "teamName": "Open Qualifier",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P14",
+          "entrantTag": "Challenger_14#LATAM",
+          "initialSeed": 14,
+          "eloRating": 1686,
+          "mainCharacter": "Sergei Dragunov",
+          "country": "PE",
+          "teamName": "Open Qualifier",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P15",
+          "entrantTag": "Challenger_15#LATAM",
+          "initialSeed": 15,
+          "eloRating": 1668,
+          "mainCharacter": "Jin Kazama",
+          "country": "US",
+          "teamName": "Open Qualifier",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P16",
+          "entrantTag": "Challenger_16#LATAM",
+          "initialSeed": 16,
+          "eloRating": 1650,
+          "mainCharacter": "Heihachi Mishima",
+          "country": "JP",
+          "teamName": "Open Qualifier",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P17",
+          "entrantTag": "Challenger_17#LATAM",
+          "initialSeed": 17,
+          "eloRating": 1632,
+          "mainCharacter": "Sergei Dragunov",
+          "country": "CO",
+          "teamName": "Open Qualifier",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P18",
+          "entrantTag": "Challenger_18#LATAM",
+          "initialSeed": 18,
+          "eloRating": 1614,
+          "mainCharacter": "Reina",
+          "country": "MX",
+          "teamName": "Open Qualifier",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P19",
+          "entrantTag": "Challenger_19#LATAM",
+          "initialSeed": 19,
+          "eloRating": 1596,
+          "mainCharacter": "Kazuya Mishima",
+          "country": "CL",
+          "teamName": "Open Qualifier",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P20",
+          "entrantTag": "Challenger_20#LATAM",
+          "initialSeed": 20,
+          "eloRating": 1578,
+          "mainCharacter": "King",
+          "country": "AR",
+          "teamName": "Open Qualifier",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P21",
+          "entrantTag": "Challenger_21#LATAM",
+          "initialSeed": 21,
+          "eloRating": 1560,
+          "mainCharacter": "Jin Kazama",
+          "country": "BR",
+          "teamName": "Open Qualifier",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P22",
+          "entrantTag": "Challenger_22#LATAM",
+          "initialSeed": 22,
+          "eloRating": 1542,
+          "mainCharacter": "Sergei Dragunov",
+          "country": "PE",
+          "teamName": "Open Qualifier",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P23",
+          "entrantTag": "Challenger_23#LATAM",
+          "initialSeed": 23,
+          "eloRating": 1524,
+          "mainCharacter": "Jin Kazama",
+          "country": "US",
+          "teamName": "Open Qualifier",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P24",
+          "entrantTag": "Challenger_24#LATAM",
+          "initialSeed": 24,
+          "eloRating": 1506,
+          "mainCharacter": "Heihachi Mishima",
+          "country": "JP",
+          "teamName": "Open Qualifier",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P25",
+          "entrantTag": "Challenger_25#LATAM",
+          "initialSeed": 25,
+          "eloRating": 1488,
+          "mainCharacter": "Sergei Dragunov",
+          "country": "CO",
+          "teamName": "Open Qualifier",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P26",
+          "entrantTag": "Challenger_26#LATAM",
+          "initialSeed": 26,
+          "eloRating": 1470,
+          "mainCharacter": "Reina",
+          "country": "MX",
+          "teamName": "Open Qualifier",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P27",
+          "entrantTag": "Challenger_27#LATAM",
+          "initialSeed": 27,
+          "eloRating": 1452,
+          "mainCharacter": "Kazuya Mishima",
+          "country": "CL",
+          "teamName": "Open Qualifier",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P28",
+          "entrantTag": "Challenger_28#LATAM",
+          "initialSeed": 28,
+          "eloRating": 1434,
+          "mainCharacter": "King",
+          "country": "AR",
+          "teamName": "Open Qualifier",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P29",
+          "entrantTag": "Challenger_29#LATAM",
+          "initialSeed": 29,
+          "eloRating": 1416,
+          "mainCharacter": "Jin Kazama",
+          "country": "BR",
+          "teamName": "Open Qualifier",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P30",
+          "entrantTag": "Challenger_30#LATAM",
+          "initialSeed": 30,
+          "eloRating": 1398,
+          "mainCharacter": "Sergei Dragunov",
+          "country": "PE",
+          "teamName": "Open Qualifier",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P31",
+          "entrantTag": "Challenger_31#LATAM",
+          "initialSeed": 31,
+          "eloRating": 1380,
+          "mainCharacter": "Jin Kazama",
+          "country": "US",
+          "teamName": "Open Qualifier",
+          "checkedIn": true
+        },
+        {
+          "entrantID": "P32",
+          "entrantTag": "Challenger_32#LATAM",
+          "initialSeed": 32,
+          "eloRating": 1362,
+          "mainCharacter": "Heihachi Mishima",
+          "country": "JP",
+          "teamName": "Open Qualifier",
+          "checkedIn": true
+        }
+      ],
+      "sets": [
+        {
+          "setID": "DE-WQF1",
+          "phase": "WINNERS",
+          "round": 1,
+          "roundLabel": "Winners Cuartos 1",
+          "bestOf": 3,
+          "entrant1ID": "P1",
+          "entrant2ID": "P8",
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "READY",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "DE-WSF1",
+          "nextLoseSetID": "DE-LR1-1",
+          "nextWinSlot": 1,
+          "nextLoseSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:54:55.402Z",
+          "other": {
+            "station": "EST-01",
+            "isStream": true,
+            "position3D": [
+              -10.5,
+              9,
+              0
+            ]
+          }
+        },
+        {
+          "setID": "DE-WQF2",
+          "phase": "WINNERS",
+          "round": 1,
+          "roundLabel": "Winners Cuartos 2",
+          "bestOf": 3,
+          "entrant1ID": "P4",
+          "entrant2ID": "P5",
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "READY",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "DE-WSF1",
+          "nextLoseSetID": "DE-LR1-1",
+          "nextWinSlot": 2,
+          "nextLoseSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:54:55.402Z",
+          "other": {
+            "station": "EST-02",
+            "isStream": false,
+            "position3D": [
+              -10.5,
+              6.6,
+              0
+            ]
+          }
+        },
+        {
+          "setID": "DE-WQF3",
+          "phase": "WINNERS",
+          "round": 1,
+          "roundLabel": "Winners Cuartos 3",
+          "bestOf": 3,
+          "entrant1ID": "P2",
+          "entrant2ID": "P7",
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "READY",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "DE-WSF2",
+          "nextLoseSetID": "DE-LR1-2",
+          "nextWinSlot": 1,
+          "nextLoseSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:54:55.402Z",
+          "other": {
+            "station": "EST-03",
+            "isStream": false,
+            "position3D": [
+              -10.5,
+              4.2,
+              0
+            ]
+          }
+        },
+        {
+          "setID": "DE-WQF4",
+          "phase": "WINNERS",
+          "round": 1,
+          "roundLabel": "Winners Cuartos 4",
+          "bestOf": 3,
+          "entrant1ID": "P3",
+          "entrant2ID": "P6",
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "READY",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "DE-WSF2",
+          "nextLoseSetID": "DE-LR1-2",
+          "nextWinSlot": 2,
+          "nextLoseSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:54:55.402Z",
+          "other": {
+            "station": "EST-04",
+            "isStream": false,
+            "position3D": [
+              -10.5,
+              1.8,
+              0
+            ]
+          }
+        },
+        {
+          "setID": "DE-WSF1",
+          "phase": "WINNERS",
+          "round": 2,
+          "roundLabel": "Winners Semifinal A",
+          "bestOf": 3,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "DE-WF",
+          "nextLoseSetID": "DE-LR2-1",
+          "nextWinSlot": 1,
+          "nextLoseSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:54:55.402Z",
+          "other": {
+            "station": "EST-01",
+            "isStream": true,
+            "position3D": [
+              -2.5,
+              7.8,
+              0
+            ]
+          }
+        },
+        {
+          "setID": "DE-WSF2",
+          "phase": "WINNERS",
+          "round": 2,
+          "roundLabel": "Winners Semifinal B",
+          "bestOf": 3,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "DE-WF",
+          "nextLoseSetID": "DE-LR2-2",
+          "nextWinSlot": 2,
+          "nextLoseSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:54:55.402Z",
+          "other": {
+            "station": "EST-02",
+            "isStream": false,
+            "position3D": [
+              -2.5,
+              3,
+              0
+            ]
+          }
+        },
+        {
+          "setID": "DE-WF",
+          "phase": "WINNERS",
+          "round": 3,
+          "roundLabel": "Winners Final",
+          "bestOf": 5,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "DE-GF",
+          "nextLoseSetID": "DE-LF",
+          "nextWinSlot": 1,
+          "nextLoseSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:54:55.402Z",
+          "other": {
+            "station": "EST-01",
+            "isStream": true,
+            "position3D": [
+              5.5,
+              5.4,
+              0
+            ]
+          }
+        },
+        {
+          "setID": "DE-LR1-1",
+          "phase": "LOSERS",
+          "round": 1,
+          "roundLabel": "Losers Ronda 1A",
+          "bestOf": 3,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "DE-LR2-1",
+          "nextLoseSetID": null,
+          "nextWinSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:54:55.402Z",
+          "other": {
+            "station": "EST-05",
+            "isStream": false,
+            "position3D": [
+              -6.5,
+              -2.6,
+              -2.6
+            ]
+          }
+        },
+        {
+          "setID": "DE-LR1-2",
+          "phase": "LOSERS",
+          "round": 1,
+          "roundLabel": "Losers Ronda 1B",
+          "bestOf": 3,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "DE-LR2-2",
+          "nextLoseSetID": null,
+          "nextWinSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:54:55.402Z",
+          "other": {
+            "station": "EST-06",
+            "isStream": false,
+            "position3D": [
+              -6.5,
+              -5.2,
+              -2.6
+            ]
+          }
+        },
+        {
+          "setID": "DE-LR2-1",
+          "phase": "LOSERS",
+          "round": 2,
+          "roundLabel": "Losers Ronda 2A",
+          "bestOf": 3,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "DE-LSF",
+          "nextLoseSetID": null,
+          "nextWinSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:54:55.402Z",
+          "other": {
+            "station": "EST-05",
+            "isStream": false,
+            "position3D": [
+              -0.5,
+              -6.2,
+              -2.6
+            ]
+          }
+        },
+        {
+          "setID": "DE-LR2-2",
+          "phase": "LOSERS",
+          "round": 2,
+          "roundLabel": "Losers Ronda 2B",
+          "bestOf": 3,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "DE-LSF",
+          "nextLoseSetID": null,
+          "nextWinSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:54:55.403Z",
+          "other": {
+            "station": "EST-06",
+            "isStream": false,
+            "position3D": [
+              -0.5,
+              -8.8,
+              -2.6
+            ]
+          }
+        },
+        {
+          "setID": "DE-LSF",
+          "phase": "LOSERS",
+          "round": 3,
+          "roundLabel": "Losers Semifinal (R3)",
+          "bestOf": 3,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "DE-LF",
+          "nextLoseSetID": null,
+          "nextWinSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:54:55.403Z",
+          "other": {
+            "station": "EST-03",
+            "isStream": false,
+            "position3D": [
+              5.5,
+              -9.8,
+              -2.6
+            ]
+          }
+        },
+        {
+          "setID": "DE-LF",
+          "phase": "LOSERS",
+          "round": 4,
+          "roundLabel": "Losers Final",
+          "bestOf": 5,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "DE-GF",
+          "nextLoseSetID": null,
+          "nextWinSlot": 2,
+          "games": [],
+          "updatedAt": "2026-10-23T00:54:55.403Z",
+          "other": {
+            "station": "EST-02",
+            "isStream": true,
+            "position3D": [
+              11.5,
+              -5.8,
+              -2
+            ]
+          }
+        },
+        {
+          "setID": "DE-GF",
+          "phase": "GRAND_FINAL",
+          "round": 5,
+          "roundLabel": "Grand Final",
+          "bestOf": 5,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": "DE-GF-RESET",
+          "nextLoseSetID": null,
+          "nextWinSlot": 1,
+          "games": [],
+          "updatedAt": "2026-10-23T00:54:55.403Z",
+          "other": {
+            "station": "STAGE-MAIN",
+            "isStream": true,
+            "position3D": [
+              17.5,
+              1.2,
+              0.8
+            ]
+          }
+        },
+        {
+          "setID": "DE-GF-RESET",
+          "phase": "GRAND_FINAL_RESET",
+          "round": 6,
+          "roundLabel": "Grand Final Reset",
+          "bestOf": 5,
+          "entrant1ID": null,
+          "entrant2ID": null,
+          "entrant1Score": 0,
+          "entrant2Score": 0,
+          "status": "WAITING",
+          "winnerID": null,
+          "loserID": null,
+          "nextWinSetID": null,
+          "nextLoseSetID": null,
+          "games": [],
+          "updatedAt": "2026-10-23T00:54:55.403Z",
+          "other": {
+            "station": "STAGE-MAIN",
+            "isStream": true,
+            "position3D": [
+              23.5,
+              1.2,
+              0.8
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "adminConfig": {
+    "deepseekApiKey": "",
+    "deepseekModel": "deepseek-chat",
+    "deepseekEndpoint": "https://api.deepseek.com/v1/chat/completions",
+    "redisTtlSeconds": 300,
+    "cloudProvider": "Google Cloud Storage",
+    "cloudBucketUri": "gs://nikbrackets-cloud-vault-2026/obf-snapshots",
+    "autoBackupEnabled": true,
+    "twoFactorRequiredForAdmin": false,
+    "totpSecret": "NIKBRACKETS2026SECRETKEY99",
+    "twoFactorVerified": true
+  },
+  "ephemeralTokens": [
+    {
+      "token": "nxg_score_reporter_st01live",
+      "userId": "usr-referee-01",
+      "name": "Tablet Estación EST-01",
+      "scope": "SCORE_REPORTER",
+      "role": "REFEREE",
+      "createdAt": "2026-10-23T00:39:20.884Z",
+      "expiresAt": "2026-10-24T00:39:20.884Z"
+    },
+    {
+      "token": "nxg_read_only_obsoverlay",
+      "userId": "usr-stream-01",
+      "name": "OBS Studio Broadcast 1080p",
+      "scope": "READ_ONLY",
+      "role": "STREAMER",
+      "createdAt": "2026-10-23T00:39:20.884Z",
+      "expiresAt": "2026-10-24T00:39:20.884Z"
+    }
+  ],
+  "thirdPartyApiKeys": [
+    {
+      "id": "ak-1",
+      "name": "Start.gg / Challonge Sync Webhook",
+      "keyPrefix": "nbk_live_89f2...",
+      "fullKey": "nbk_live_89f2a4c71d90e3b1f2026nikbrackets",
+      "scopes": [
+        "READ_ONLY",
+        "SCORE_REPORTER"
+      ],
+      "createdAt": "2026-10-23T00:39:20.884Z",
+      "lastUsedAt": "2026-10-23T00:39:20.884Z",
+      "requestsCount": 48
+    }
+  ],
+  "notifications": [
+    {
+      "id": "push_mvk9cpf0_maxq",
+      "type": "MATCH_READY",
+      "title": "Torneo Creado: Copa Mundial OBF 2026",
+      "message": "Se generó el árbol DAG con formato double_elimination para 32 competidores.",
+      "tournamentSlug": "copa-mundial-obf-2026-cpey",
+      "setID": "DE-WQF1",
+      "timestamp": "2026-10-23T00:54:55.404Z",
+      "priority": "high"
+    },
+    {
+      "id": "notif-init-1",
+      "type": "MATCH_READY",
+      "title": "Torneo Inicializado en Motor DAG O(1)",
+      "message": "SW-R1-1 (Niklauss#KR1 vs Joka#UK) está listo en la estación EST-01 (Stream Principal).",
+      "tournamentSlug": "nexus-tekken8-masters",
+      "setID": "SW-R1-1",
+      "timestamp": "2026-10-23T00:39:20.884Z",
+      "priority": "high"
+    }
+  ],
+  "cloudBackups": [
+    {
+      "id": "bkp_mvk8soc6",
+      "name": "Snapshot Inicial Automático OBF v1.0",
+      "provider": "Google Cloud Storage",
+      "bucketUri": "gs://nikbrackets-cloud-vault-2026/obf-snapshots/1792715960886.obf.json",
+      "checksumSha256": "5e0fc7e039c5ce68743edfe5",
+      "sizeBytes": 30437,
+      "createdAt": "2026-10-23T00:39:20.886Z",
+      "tournamentCount": 2,
+      "snapshot": {
+        "nexus-tekken8-masters": {
+          "version": "1.0",
+          "standard": "Open Bracket Format (OBF)",
+          "event": {
+            "id": "evt-nexus-tekken8-masters",
+            "organizationSlug": "nikbrackets-pro",
+            "tournamentSlug": "nexus-tekken8-masters",
+            "eventSlug": "nexus-tekken8-masters-main",
+            "name": "Nexus Grid Major 2026 — Tekken 8 World Tour (24 Pro Showcase)",
+            "date": "2026-10-23",
+            "gameName": "Tekken 8",
+            "gameSlug": "tekken8",
+            "format": "two_stage",
+            "numberEntrants": 24,
+            "guaranteedMinMatches": 3,
+            "venueFee": 25,
+            "entryFee": 25,
+            "prizePool": 50000
+          },
+          "entrants": [
+            {
+              "entrantID": "P1",
+              "entrantTag": "Niklauss#KR1",
+              "initialSeed": 1,
+              "eloRating": 2240,
+              "mainCharacter": "Sergei Dragunov",
+              "country": "CO",
+              "teamName": "Nexus Latam",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "P2",
+              "entrantTag": "ArslanAsh#PK",
+              "initialSeed": 2,
+              "eloRating": 2215,
+              "mainCharacter": "Nina Williams",
+              "country": "PK",
+              "teamName": "Twisted Minds",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "P3",
+              "entrantTag": "Knee#KR",
+              "initialSeed": 3,
+              "eloRating": 2190,
+              "mainCharacter": "Bryan Fury",
+              "country": "KR",
+              "teamName": "DRX",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "P4",
+              "entrantTag": "MenaRD#DO",
+              "initialSeed": 4,
+              "eloRating": 2170,
+              "mainCharacter": "King",
+              "country": "DO",
+              "teamName": "Bandits",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "P5",
+              "entrantTag": "Chikurin#JP",
+              "initialSeed": 5,
+              "eloRating": 2150,
+              "mainCharacter": "Lili Rochefort",
+              "country": "JP",
+              "teamName": "THY",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "P6",
+              "entrantTag": "AtifButt#PK",
+              "initialSeed": 6,
+              "eloRating": 2135,
+              "mainCharacter": "Sergei Dragunov",
+              "country": "PK",
+              "teamName": "Falcons",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "P7",
+              "entrantTag": "CBM#KR",
+              "initialSeed": 7,
+              "eloRating": 2115,
+              "mainCharacter": "Jin Kazama",
+              "country": "KR",
+              "teamName": "FearX",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "P8",
+              "entrantTag": "Joka#UK",
+              "initialSeed": 8,
+              "eloRating": 2095,
+              "mainCharacter": "Heihachi Mishima",
+              "country": "GB",
+              "teamName": "MOUZ",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "P9",
+              "entrantTag": "Ulsan#KR",
+              "initialSeed": 9,
+              "eloRating": 2080,
+              "mainCharacter": "Reina",
+              "country": "KR",
+              "teamName": "KDF",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "P10",
+              "entrantTag": "Nobi#JP",
+              "initialSeed": 10,
+              "eloRating": 2065,
+              "mainCharacter": "Sergei Dragunov",
+              "country": "JP",
+              "teamName": "Team Yamasa",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "P11",
+              "entrantTag": "Rangchu#KR",
+              "initialSeed": 11,
+              "eloRating": 2050,
+              "mainCharacter": "Kazuya Mishima",
+              "country": "KR",
+              "teamName": "Varrel",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "P12",
+              "entrantTag": "Mulgold#KR",
+              "initialSeed": 12,
+              "eloRating": 2035,
+              "mainCharacter": "Clive Rosfield",
+              "country": "KR",
+              "teamName": "Falcon",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "P13",
+              "entrantTag": "LowHigh#KR",
+              "initialSeed": 13,
+              "eloRating": 2020,
+              "mainCharacter": "Bryan Fury",
+              "country": "KR",
+              "teamName": "DRX",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "P14",
+              "entrantTag": "AO#JP",
+              "initialSeed": 14,
+              "eloRating": 2005,
+              "mainCharacter": "Victor Chevalier",
+              "country": "JP",
+              "teamName": "GYogun",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "P15",
+              "entrantTag": "Kkokkoma#KR",
+              "initialSeed": 15,
+              "eloRating": 1990,
+              "mainCharacter": "Sergei Dragunov",
+              "country": "KR",
+              "teamName": "Talon",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "P16",
+              "entrantTag": "Yagami#AU",
+              "initialSeed": 16,
+              "eloRating": 1975,
+              "mainCharacter": "Reina",
+              "country": "AU",
+              "teamName": "Oceania FGC",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "P17",
+              "entrantTag": "Shadow20z#US",
+              "initialSeed": 17,
+              "eloRating": 1960,
+              "mainCharacter": "Azucena",
+              "country": "US",
+              "teamName": "Liquid",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "P18",
+              "entrantTag": "RunitBlack#US",
+              "initialSeed": 18,
+              "eloRating": 1945,
+              "mainCharacter": "Jin Kazama",
+              "country": "US",
+              "teamName": "SoCal",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "P19",
+              "entrantTag": "Sephiblack#DE",
+              "initialSeed": 19,
+              "eloRating": 1930,
+              "mainCharacter": "Yoshimitsu",
+              "country": "DE",
+              "teamName": "BIG",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "P20",
+              "entrantTag": "Jeondding#KR",
+              "initialSeed": 20,
+              "eloRating": 1915,
+              "mainCharacter": "King",
+              "country": "KR",
+              "teamName": "Vitality",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "P21",
+              "entrantTag": "Keisuke#JP",
+              "initialSeed": 21,
+              "eloRating": 1900,
+              "mainCharacter": "Kazuya Mishima",
+              "country": "JP",
+              "teamName": "Fukuoka",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "P22",
+              "entrantTag": "Double#JP",
+              "initialSeed": 22,
+              "eloRating": 1885,
+              "mainCharacter": "Nina Williams",
+              "country": "JP",
+              "teamName": "ZETA",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "P23",
+              "entrantTag": "Farzeen#PK",
+              "initialSeed": 23,
+              "eloRating": 1870,
+              "mainCharacter": "Victor Chevalier",
+              "country": "PK",
+              "teamName": "Ashes",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "P24",
+              "entrantTag": "AK#PH",
+              "initialSeed": 24,
+              "eloRating": 1855,
+              "mainCharacter": "Heihachi Mishima",
+              "country": "PH",
+              "teamName": "Navi",
+              "checkedIn": true
+            }
+          ],
+          "sets": [
+            {
+              "setID": "SW-R1-1",
+              "phase": "SWISS",
+              "round": 1,
+              "roundLabel": "Suiza R1 (1 vs 24)",
+              "bestOf": 3,
+              "entrant1ID": "P1",
+              "entrant2ID": "P24",
+              "entrant1Score": 2,
+              "entrant2Score": 0,
+              "status": "COMPLETED",
+              "winnerID": "P1",
+              "loserID": "P24",
+              "nextWinSetID": "SW-R2-1",
+              "nextLoseSetID": "SC-R1-1",
+              "nextWinSlot": 1,
+              "nextLoseSlot": 1,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-01",
+                "isStream": true,
+                "position3D": [
+                  -19.5,
+                  13.8,
+                  1.8
+                ]
+              }
+            },
+            {
+              "setID": "SW-R1-2",
+              "phase": "SWISS",
+              "round": 1,
+              "roundLabel": "Suiza R1 (12 vs 13)",
+              "bestOf": 3,
+              "entrant1ID": "P12",
+              "entrant2ID": "P13",
+              "entrant1Score": 2,
+              "entrant2Score": 1,
+              "status": "COMPLETED",
+              "winnerID": "P12",
+              "loserID": "P13",
+              "nextWinSetID": "SW-R2-1",
+              "nextLoseSetID": "SC-R1-1",
+              "nextWinSlot": 2,
+              "nextLoseSlot": 2,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-02",
+                "isStream": false,
+                "position3D": [
+                  -19.5,
+                  11.4,
+                  1.8
+                ]
+              }
+            },
+            {
+              "setID": "SW-R1-3",
+              "phase": "SWISS",
+              "round": 1,
+              "roundLabel": "Suiza R1 (8 vs 17)",
+              "bestOf": 3,
+              "entrant1ID": "P8",
+              "entrant2ID": "P17",
+              "entrant1Score": 2,
+              "entrant2Score": 0,
+              "status": "COMPLETED",
+              "winnerID": "P8",
+              "loserID": "P17",
+              "nextWinSetID": "SW-R2-2",
+              "nextLoseSetID": "SC-R1-2",
+              "nextWinSlot": 1,
+              "nextLoseSlot": 1,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-03",
+                "isStream": false,
+                "position3D": [
+                  -19.5,
+                  9,
+                  1.8
+                ]
+              }
+            },
+            {
+              "setID": "SW-R1-4",
+              "phase": "SWISS",
+              "round": 1,
+              "roundLabel": "Suiza R1 (5 vs 20)",
+              "bestOf": 3,
+              "entrant1ID": "P5",
+              "entrant2ID": "P20",
+              "entrant1Score": 2,
+              "entrant2Score": 1,
+              "status": "COMPLETED",
+              "winnerID": "P5",
+              "loserID": "P20",
+              "nextWinSetID": "SW-R2-2",
+              "nextLoseSetID": "SC-R1-2",
+              "nextWinSlot": 2,
+              "nextLoseSlot": 2,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-04",
+                "isStream": false,
+                "position3D": [
+                  -19.5,
+                  6.6,
+                  1.8
+                ]
+              }
+            },
+            {
+              "setID": "SW-R1-5",
+              "phase": "SWISS",
+              "round": 1,
+              "roundLabel": "Suiza R1 (4 vs 21)",
+              "bestOf": 3,
+              "entrant1ID": "P4",
+              "entrant2ID": "P21",
+              "entrant1Score": 2,
+              "entrant2Score": 0,
+              "status": "COMPLETED",
+              "winnerID": "P4",
+              "loserID": "P21",
+              "nextWinSetID": "SW-R2-3",
+              "nextLoseSetID": "SC-R1-3",
+              "nextWinSlot": 1,
+              "nextLoseSlot": 1,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-05",
+                "isStream": false,
+                "position3D": [
+                  -19.5,
+                  4.2,
+                  1.8
+                ]
+              }
+            },
+            {
+              "setID": "SW-R1-6",
+              "phase": "SWISS",
+              "round": 1,
+              "roundLabel": "Suiza R1 (9 vs 16)",
+              "bestOf": 3,
+              "entrant1ID": "P9",
+              "entrant2ID": "P16",
+              "entrant1Score": 1,
+              "entrant2Score": 2,
+              "status": "COMPLETED",
+              "winnerID": "P16",
+              "loserID": "P9",
+              "nextWinSetID": "SW-R2-3",
+              "nextLoseSetID": "SC-R1-3",
+              "nextWinSlot": 2,
+              "nextLoseSlot": 2,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-06",
+                "isStream": false,
+                "position3D": [
+                  -19.5,
+                  1.8,
+                  1.8
+                ]
+              }
+            },
+            {
+              "setID": "SW-R1-7",
+              "phase": "SWISS",
+              "round": 1,
+              "roundLabel": "Suiza R1 (2 vs 23)",
+              "bestOf": 3,
+              "entrant1ID": "P2",
+              "entrant2ID": "P23",
+              "entrant1Score": 2,
+              "entrant2Score": 0,
+              "status": "COMPLETED",
+              "winnerID": "P2",
+              "loserID": "P23",
+              "nextWinSetID": "SW-R2-4",
+              "nextLoseSetID": "SC-R1-4",
+              "nextWinSlot": 1,
+              "nextLoseSlot": 1,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-01",
+                "isStream": true,
+                "position3D": [
+                  -13.8,
+                  13.8,
+                  1
+                ]
+              }
+            },
+            {
+              "setID": "SW-R1-8",
+              "phase": "SWISS",
+              "round": 1,
+              "roundLabel": "Suiza R1 (11 vs 14)",
+              "bestOf": 3,
+              "entrant1ID": "P11",
+              "entrant2ID": "P14",
+              "entrant1Score": 2,
+              "entrant2Score": 1,
+              "status": "COMPLETED",
+              "winnerID": "P11",
+              "loserID": "P14",
+              "nextWinSetID": "SW-R2-4",
+              "nextLoseSetID": "SC-R1-4",
+              "nextWinSlot": 2,
+              "nextLoseSlot": 2,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-02",
+                "isStream": false,
+                "position3D": [
+                  -13.8,
+                  11.4,
+                  1
+                ]
+              }
+            },
+            {
+              "setID": "SW-R1-9",
+              "phase": "SWISS",
+              "round": 1,
+              "roundLabel": "Suiza R1 (7 vs 18)",
+              "bestOf": 3,
+              "entrant1ID": "P7",
+              "entrant2ID": "P18",
+              "entrant1Score": 2,
+              "entrant2Score": 1,
+              "status": "COMPLETED",
+              "winnerID": "P7",
+              "loserID": "P18",
+              "nextWinSetID": "SW-R2-5",
+              "nextLoseSetID": "SC-R1-5",
+              "nextWinSlot": 1,
+              "nextLoseSlot": 1,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-03",
+                "isStream": false,
+                "position3D": [
+                  -13.8,
+                  9,
+                  1
+                ]
+              }
+            },
+            {
+              "setID": "SW-R1-10",
+              "phase": "SWISS",
+              "round": 1,
+              "roundLabel": "Suiza R1 (6 vs 19)",
+              "bestOf": 3,
+              "entrant1ID": "P6",
+              "entrant2ID": "P19",
+              "entrant1Score": 0,
+              "entrant2Score": 2,
+              "status": "COMPLETED",
+              "winnerID": "P19",
+              "loserID": "P6",
+              "nextWinSetID": "SW-R2-5",
+              "nextLoseSetID": "SC-R1-5",
+              "nextWinSlot": 2,
+              "nextLoseSlot": 2,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-04",
+                "isStream": false,
+                "position3D": [
+                  -13.8,
+                  6.6,
+                  1
+                ]
+              }
+            },
+            {
+              "setID": "SW-R1-11",
+              "phase": "SWISS",
+              "round": 1,
+              "roundLabel": "Suiza R1 (3 vs 22)",
+              "bestOf": 3,
+              "entrant1ID": "P3",
+              "entrant2ID": "P22",
+              "entrant1Score": 2,
+              "entrant2Score": 0,
+              "status": "COMPLETED",
+              "winnerID": "P3",
+              "loserID": "P22",
+              "nextWinSetID": "SW-R2-6",
+              "nextLoseSetID": "SC-R1-6",
+              "nextWinSlot": 1,
+              "nextLoseSlot": 1,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-05",
+                "isStream": false,
+                "position3D": [
+                  -13.8,
+                  4.2,
+                  1
+                ]
+              }
+            },
+            {
+              "setID": "SW-R1-12",
+              "phase": "SWISS",
+              "round": 1,
+              "roundLabel": "Suiza R1 (10 vs 15)",
+              "bestOf": 3,
+              "entrant1ID": "P10",
+              "entrant2ID": "P15",
+              "entrant1Score": 2,
+              "entrant2Score": 1,
+              "status": "COMPLETED",
+              "winnerID": "P10",
+              "loserID": "P15",
+              "nextWinSetID": "SW-R2-6",
+              "nextLoseSetID": "SC-R1-6",
+              "nextWinSlot": 2,
+              "nextLoseSlot": 2,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-06",
+                "isStream": false,
+                "position3D": [
+                  -13.8,
+                  1.8,
+                  1
+                ]
+              }
+            },
+            {
+              "setID": "SW-R2-1",
+              "phase": "SWISS",
+              "round": 2,
+              "roundLabel": "Suiza R2 (1-0 #1)",
+              "bestOf": 3,
+              "entrant1ID": "P1",
+              "entrant2ID": "P12",
+              "entrant1Score": 2,
+              "entrant2Score": 1,
+              "status": "COMPLETED",
+              "winnerID": "P1",
+              "loserID": "P12",
+              "nextWinSetID": "W-QF-1",
+              "nextLoseSetID": "L-R1-1",
+              "nextWinSlot": 1,
+              "nextLoseSlot": 1,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-01",
+                "isStream": true,
+                "position3D": [
+                  -7.8,
+                  13.8,
+                  0.4
+                ]
+              }
+            },
+            {
+              "setID": "SW-R2-2",
+              "phase": "SWISS",
+              "round": 2,
+              "roundLabel": "Suiza R2 (1-0 #2)",
+              "bestOf": 3,
+              "entrant1ID": "P8",
+              "entrant2ID": "P5",
+              "entrant1Score": 2,
+              "entrant2Score": 0,
+              "status": "COMPLETED",
+              "winnerID": "P8",
+              "loserID": "P5",
+              "nextWinSetID": "W-QF-1",
+              "nextLoseSetID": "L-R1-1",
+              "nextWinSlot": 2,
+              "nextLoseSlot": 2,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-02",
+                "isStream": false,
+                "position3D": [
+                  -7.8,
+                  11.4,
+                  0.4
+                ]
+              }
+            },
+            {
+              "setID": "SW-R2-3",
+              "phase": "SWISS",
+              "round": 2,
+              "roundLabel": "Suiza R2 (1-0 #3)",
+              "bestOf": 3,
+              "entrant1ID": "P4",
+              "entrant2ID": "P16",
+              "entrant1Score": 2,
+              "entrant2Score": 1,
+              "status": "COMPLETED",
+              "winnerID": "P4",
+              "loserID": "P16",
+              "nextWinSetID": "W-QF-2",
+              "nextLoseSetID": "L-R1-2",
+              "nextWinSlot": 1,
+              "nextLoseSlot": 1,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-03",
+                "isStream": false,
+                "position3D": [
+                  -7.8,
+                  9,
+                  0.4
+                ]
+              }
+            },
+            {
+              "setID": "SW-R2-4",
+              "phase": "SWISS",
+              "round": 2,
+              "roundLabel": "Suiza R2 (1-0 #4)",
+              "bestOf": 3,
+              "entrant1ID": "P2",
+              "entrant2ID": "P11",
+              "entrant1Score": 1,
+              "entrant2Score": 2,
+              "status": "COMPLETED",
+              "winnerID": "P11",
+              "loserID": "P2",
+              "nextWinSetID": "W-QF-2",
+              "nextLoseSetID": "L-R1-2",
+              "nextWinSlot": 2,
+              "nextLoseSlot": 2,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-04",
+                "isStream": false,
+                "position3D": [
+                  -7.8,
+                  6.6,
+                  0.4
+                ]
+              }
+            },
+            {
+              "setID": "SW-R2-5",
+              "phase": "SWISS",
+              "round": 2,
+              "roundLabel": "Suiza R2 (1-0 #5)",
+              "bestOf": 3,
+              "entrant1ID": "P7",
+              "entrant2ID": "P19",
+              "entrant1Score": 2,
+              "entrant2Score": 1,
+              "status": "COMPLETED",
+              "winnerID": "P7",
+              "loserID": "P19",
+              "nextWinSetID": "W-SF-2",
+              "nextLoseSetID": "L-R1-3",
+              "nextWinSlot": 1,
+              "nextLoseSlot": 1,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-05",
+                "isStream": false,
+                "position3D": [
+                  -7.8,
+                  4.2,
+                  0.4
+                ]
+              }
+            },
+            {
+              "setID": "SW-R2-6",
+              "phase": "SWISS",
+              "round": 2,
+              "roundLabel": "Suiza R2 (1-0 #6)",
+              "bestOf": 3,
+              "entrant1ID": "P3",
+              "entrant2ID": "P10",
+              "entrant1Score": 1,
+              "entrant2Score": 1,
+              "status": "IN_PROGRESS",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "W-SF-2",
+              "nextLoseSetID": "L-R1-3",
+              "nextWinSlot": 2,
+              "nextLoseSlot": 2,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-06",
+                "isStream": false,
+                "position3D": [
+                  -7.8,
+                  1.8,
+                  0.4
+                ]
+              }
+            },
+            {
+              "setID": "W-QF-1",
+              "phase": "WINNERS",
+              "round": 3,
+              "roundLabel": "Winners Cuartos A",
+              "bestOf": 3,
+              "entrant1ID": "P1",
+              "entrant2ID": "P8",
+              "entrant1Score": 2,
+              "entrant2Score": 1,
+              "status": "COMPLETED",
+              "winnerID": "P1",
+              "loserID": "P8",
+              "nextWinSetID": "W-SF-1",
+              "nextLoseSetID": "L-R2-1",
+              "nextWinSlot": 1,
+              "nextLoseSlot": 2,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-01",
+                "isStream": true,
+                "position3D": [
+                  -1.4,
+                  11.6,
+                  0
+                ]
+              }
+            },
+            {
+              "setID": "W-QF-2",
+              "phase": "WINNERS",
+              "round": 3,
+              "roundLabel": "Winners Cuartos B",
+              "bestOf": 3,
+              "entrant1ID": "P4",
+              "entrant2ID": "P11",
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "READY",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "W-SF-1",
+              "nextLoseSetID": "L-R2-2",
+              "nextWinSlot": 2,
+              "nextLoseSlot": 2,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.883Z",
+              "other": {
+                "station": "EST-02",
+                "isStream": false,
+                "position3D": [
+                  -1.4,
+                  6.2,
+                  0
+                ]
+              }
+            },
+            {
+              "setID": "W-SF-1",
+              "phase": "WINNERS",
+              "round": 4,
+              "roundLabel": "Winners Semifinal 1",
+              "bestOf": 3,
+              "entrant1ID": "P1",
+              "entrant2ID": null,
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "WAITING",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "W-FIN",
+              "nextLoseSetID": "L-SF-1",
+              "nextWinSlot": 1,
+              "nextLoseSlot": 1,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.883Z",
+              "other": {
+                "station": "EST-01",
+                "isStream": true,
+                "position3D": [
+                  6.4,
+                  11,
+                  0
+                ]
+              }
+            },
+            {
+              "setID": "W-SF-2",
+              "phase": "WINNERS",
+              "round": 4,
+              "roundLabel": "Winners Semifinal 2",
+              "bestOf": 3,
+              "entrant1ID": "P7",
+              "entrant2ID": null,
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "WAITING",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "W-FIN",
+              "nextLoseSetID": "L-SF-1",
+              "nextWinSlot": 2,
+              "nextLoseSlot": 2,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.883Z",
+              "other": {
+                "station": "EST-02",
+                "isStream": true,
+                "position3D": [
+                  6.4,
+                  5.4,
+                  0
+                ]
+              }
+            },
+            {
+              "setID": "W-FIN",
+              "phase": "WINNERS",
+              "round": 5,
+              "roundLabel": "Winners Final",
+              "bestOf": 5,
+              "entrant1ID": null,
+              "entrant2ID": null,
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "WAITING",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "GF-1",
+              "nextLoseSetID": "L-FIN",
+              "nextWinSlot": 1,
+              "nextLoseSlot": 1,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.883Z",
+              "other": {
+                "station": "STAGE-MAIN",
+                "isStream": true,
+                "position3D": [
+                  14.2,
+                  8.2,
+                  0
+                ]
+              }
+            },
+            {
+              "setID": "L-R1-1",
+              "phase": "LOSERS",
+              "round": 3,
+              "roundLabel": "Losers R1-A",
+              "bestOf": 3,
+              "entrant1ID": "P12",
+              "entrant2ID": "P5",
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "READY",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "L-R2-1",
+              "nextLoseSetID": null,
+              "nextWinSlot": 1,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.883Z",
+              "other": {
+                "station": "EST-03",
+                "isStream": false,
+                "position3D": [
+                  -1.4,
+                  -2.4,
+                  -2.6
+                ]
+              }
+            },
+            {
+              "setID": "L-R1-2",
+              "phase": "LOSERS",
+              "round": 3,
+              "roundLabel": "Losers R1-B",
+              "bestOf": 3,
+              "entrant1ID": "P16",
+              "entrant2ID": "P2",
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "READY",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "L-R2-2",
+              "nextLoseSetID": null,
+              "nextWinSlot": 1,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.883Z",
+              "other": {
+                "station": "EST-04",
+                "isStream": false,
+                "position3D": [
+                  -1.4,
+                  -5,
+                  -2.6
+                ]
+              }
+            },
+            {
+              "setID": "L-R1-3",
+              "phase": "LOSERS",
+              "round": 3,
+              "roundLabel": "Losers R1-C",
+              "bestOf": 3,
+              "entrant1ID": "P19",
+              "entrant2ID": null,
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "WAITING",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "L-SF-2",
+              "nextLoseSetID": null,
+              "nextWinSlot": 2,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.883Z",
+              "other": {
+                "station": "EST-05",
+                "isStream": false,
+                "position3D": [
+                  -1.4,
+                  -7.6,
+                  -2.6
+                ]
+              }
+            },
+            {
+              "setID": "L-R2-1",
+              "phase": "LOSERS",
+              "round": 4,
+              "roundLabel": "Losers R2 Top 8 A",
+              "bestOf": 3,
+              "entrant1ID": null,
+              "entrant2ID": "P8",
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "WAITING",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "L-SF-2",
+              "nextLoseSetID": null,
+              "nextWinSlot": 1,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.883Z",
+              "other": {
+                "station": "EST-03",
+                "isStream": false,
+                "position3D": [
+                  4.8,
+                  -3.4,
+                  -2.6
+                ]
+              }
+            },
+            {
+              "setID": "L-R2-2",
+              "phase": "LOSERS",
+              "round": 4,
+              "roundLabel": "Losers R2 Top 8 B",
+              "bestOf": 3,
+              "entrant1ID": null,
+              "entrant2ID": null,
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "WAITING",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "L-FIN",
+              "nextLoseSetID": null,
+              "nextWinSlot": 2,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.883Z",
+              "other": {
+                "station": "EST-04",
+                "isStream": false,
+                "position3D": [
+                  4.8,
+                  -6.4,
+                  -2.6
+                ]
+              }
+            },
+            {
+              "setID": "L-SF-1",
+              "phase": "LOSERS",
+              "round": 5,
+              "roundLabel": "Losers Semifinal A",
+              "bestOf": 3,
+              "entrant1ID": null,
+              "entrant2ID": null,
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "WAITING",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "L-FIN",
+              "nextLoseSetID": null,
+              "nextWinSlot": 2,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.883Z",
+              "other": {
+                "station": "EST-02",
+                "isStream": false,
+                "position3D": [
+                  11,
+                  -3,
+                  -2.6
+                ]
+              }
+            },
+            {
+              "setID": "L-SF-2",
+              "phase": "LOSERS",
+              "round": 5,
+              "roundLabel": "Losers Semifinal B",
+              "bestOf": 3,
+              "entrant1ID": null,
+              "entrant2ID": null,
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "WAITING",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "L-SF-1",
+              "nextLoseSetID": null,
+              "nextWinSlot": 1,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.883Z",
+              "other": {
+                "station": "EST-03",
+                "isStream": false,
+                "position3D": [
+                  11,
+                  -6.2,
+                  -2.6
+                ]
+              }
+            },
+            {
+              "setID": "L-FIN",
+              "phase": "LOSERS",
+              "round": 6,
+              "roundLabel": "Losers Final",
+              "bestOf": 5,
+              "entrant1ID": null,
+              "entrant2ID": null,
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "WAITING",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "GF-1",
+              "nextLoseSetID": null,
+              "nextWinSlot": 2,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.883Z",
+              "other": {
+                "station": "STAGE-MAIN",
+                "isStream": true,
+                "position3D": [
+                  17.2,
+                  -4.6,
+                  -2
+                ]
+              }
+            },
+            {
+              "setID": "SC-R1-1",
+              "phase": "SECOND_CHANCE",
+              "round": 2,
+              "roundLabel": "2nd Chance R1-1",
+              "bestOf": 3,
+              "entrant1ID": "P24",
+              "entrant2ID": "P13",
+              "entrant1Score": 2,
+              "entrant2Score": 0,
+              "status": "COMPLETED",
+              "winnerID": "P24",
+              "loserID": "P13",
+              "nextWinSetID": "SC-QF-1",
+              "nextLoseSetID": null,
+              "nextWinSlot": 1,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-01",
+                "isStream": false,
+                "position3D": [
+                  -13.8,
+                  -11.4,
+                  1.6
+                ]
+              }
+            },
+            {
+              "setID": "SC-R1-2",
+              "phase": "SECOND_CHANCE",
+              "round": 2,
+              "roundLabel": "2nd Chance R1-2",
+              "bestOf": 3,
+              "entrant1ID": "P17",
+              "entrant2ID": "P20",
+              "entrant1Score": 1,
+              "entrant2Score": 2,
+              "status": "COMPLETED",
+              "winnerID": "P20",
+              "loserID": "P17",
+              "nextWinSetID": "SC-QF-1",
+              "nextLoseSetID": null,
+              "nextWinSlot": 2,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-02",
+                "isStream": false,
+                "position3D": [
+                  -13.8,
+                  -14,
+                  1.6
+                ]
+              }
+            },
+            {
+              "setID": "SC-R1-3",
+              "phase": "SECOND_CHANCE",
+              "round": 2,
+              "roundLabel": "2nd Chance R1-3",
+              "bestOf": 3,
+              "entrant1ID": "P21",
+              "entrant2ID": "P9",
+              "entrant1Score": 2,
+              "entrant2Score": 1,
+              "status": "COMPLETED",
+              "winnerID": "P21",
+              "loserID": "P9",
+              "nextWinSetID": "SC-QF-2",
+              "nextLoseSetID": null,
+              "nextWinSlot": 1,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-03",
+                "isStream": false,
+                "position3D": [
+                  -13.8,
+                  -16.6,
+                  1.6
+                ]
+              }
+            },
+            {
+              "setID": "SC-R1-4",
+              "phase": "SECOND_CHANCE",
+              "round": 2,
+              "roundLabel": "2nd Chance R1-4",
+              "bestOf": 3,
+              "entrant1ID": "P23",
+              "entrant2ID": "P14",
+              "entrant1Score": 2,
+              "entrant2Score": 0,
+              "status": "COMPLETED",
+              "winnerID": "P23",
+              "loserID": "P14",
+              "nextWinSetID": "SC-QF-2",
+              "nextLoseSetID": null,
+              "nextWinSlot": 2,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-04",
+                "isStream": false,
+                "position3D": [
+                  -7.8,
+                  -11.4,
+                  1.6
+                ]
+              }
+            },
+            {
+              "setID": "SC-R1-5",
+              "phase": "SECOND_CHANCE",
+              "round": 2,
+              "roundLabel": "2nd Chance R1-5",
+              "bestOf": 3,
+              "entrant1ID": "P18",
+              "entrant2ID": "P6",
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "READY",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "SC-QF-3",
+              "nextLoseSetID": null,
+              "nextWinSlot": 1,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.883Z",
+              "other": {
+                "station": "EST-05",
+                "isStream": false,
+                "position3D": [
+                  -7.8,
+                  -14,
+                  1.6
+                ]
+              }
+            },
+            {
+              "setID": "SC-R1-6",
+              "phase": "SECOND_CHANCE",
+              "round": 2,
+              "roundLabel": "2nd Chance R1-6",
+              "bestOf": 3,
+              "entrant1ID": "P22",
+              "entrant2ID": "P15",
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "READY",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "SC-QF-3",
+              "nextLoseSetID": null,
+              "nextWinSlot": 2,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.883Z",
+              "other": {
+                "station": "EST-06",
+                "isStream": false,
+                "position3D": [
+                  -7.8,
+                  -16.6,
+                  1.6
+                ]
+              }
+            },
+            {
+              "setID": "SC-QF-1",
+              "phase": "SECOND_CHANCE",
+              "round": 3,
+              "roundLabel": "2nd Chance Cuartos 1",
+              "bestOf": 3,
+              "entrant1ID": "P24",
+              "entrant2ID": "P20",
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "READY",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "SC-SF-1",
+              "nextLoseSetID": null,
+              "nextWinSlot": 1,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.883Z",
+              "other": {
+                "station": "EST-05",
+                "isStream": false,
+                "position3D": [
+                  -1.4,
+                  -11.4,
+                  1.6
+                ]
+              }
+            },
+            {
+              "setID": "SC-QF-2",
+              "phase": "SECOND_CHANCE",
+              "round": 3,
+              "roundLabel": "2nd Chance Cuartos 2",
+              "bestOf": 3,
+              "entrant1ID": "P21",
+              "entrant2ID": "P23",
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "READY",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "SC-SF-1",
+              "nextLoseSetID": null,
+              "nextWinSlot": 2,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.883Z",
+              "other": {
+                "station": "EST-06",
+                "isStream": false,
+                "position3D": [
+                  -1.4,
+                  -14,
+                  1.6
+                ]
+              }
+            },
+            {
+              "setID": "SC-QF-3",
+              "phase": "SECOND_CHANCE",
+              "round": 3,
+              "roundLabel": "2nd Chance Cuartos 3",
+              "bestOf": 3,
+              "entrant1ID": null,
+              "entrant2ID": null,
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "WAITING",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "SC-FIN",
+              "nextLoseSetID": null,
+              "nextWinSlot": 2,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.883Z",
+              "other": {
+                "station": "EST-05",
+                "isStream": false,
+                "position3D": [
+                  -1.4,
+                  -16.6,
+                  1.6
+                ]
+              }
+            },
+            {
+              "setID": "SC-SF-1",
+              "phase": "SECOND_CHANCE",
+              "round": 4,
+              "roundLabel": "2nd Chance Semifinal",
+              "bestOf": 3,
+              "entrant1ID": null,
+              "entrant2ID": null,
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "WAITING",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "SC-FIN",
+              "nextLoseSetID": null,
+              "nextWinSlot": 1,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.883Z",
+              "other": {
+                "station": "EST-05",
+                "isStream": false,
+                "position3D": [
+                  6.4,
+                  -13,
+                  1.6
+                ]
+              }
+            },
+            {
+              "setID": "SC-FIN",
+              "phase": "SECOND_CHANCE",
+              "round": 5,
+              "roundLabel": "Second Chance Final (24P)",
+              "bestOf": 3,
+              "entrant1ID": null,
+              "entrant2ID": null,
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "WAITING",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": null,
+              "nextLoseSetID": null,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.883Z",
+              "other": {
+                "station": "EST-05",
+                "isStream": true,
+                "position3D": [
+                  14.2,
+                  -13,
+                  1.6
+                ]
+              }
+            },
+            {
+              "setID": "GF-1",
+              "phase": "GRAND_FINAL",
+              "round": 7,
+              "roundLabel": "Grand Final (24P Two-Stage)",
+              "bestOf": 5,
+              "entrant1ID": null,
+              "entrant2ID": null,
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "WAITING",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "GF-RESET",
+              "nextLoseSetID": null,
+              "nextWinSlot": 1,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.883Z",
+              "other": {
+                "station": "STAGE-MAIN",
+                "isStream": true,
+                "position3D": [
+                  22.4,
+                  2.2,
+                  0.8
+                ]
+              }
+            },
+            {
+              "setID": "GF-RESET",
+              "phase": "GRAND_FINAL_RESET",
+              "round": 8,
+              "roundLabel": "Grand Final Reset",
+              "bestOf": 5,
+              "entrant1ID": null,
+              "entrant2ID": null,
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "WAITING",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": null,
+              "nextLoseSetID": null,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.883Z",
+              "other": {
+                "station": "STAGE-MAIN",
+                "isStream": true,
+                "position3D": [
+                  28.4,
+                  2.2,
+                  0.8
+                ]
+              }
+            }
+          ]
+        },
+        "capcom-pro-sf6-latam": {
+          "version": "1.0",
+          "standard": "Open Bracket Format (OBF)",
+          "event": {
+            "id": "evt-capcom-pro-sf6-latam",
+            "organizationSlug": "nikbrackets-pro",
+            "tournamentSlug": "capcom-pro-sf6-latam",
+            "eventSlug": "capcom-pro-sf6-latam-main",
+            "name": "Premiere Latam 2026 — Street Fighter 6",
+            "date": "2026-10-23",
+            "gameName": "Street Fighter 6",
+            "gameSlug": "sf6",
+            "format": "double_elimination",
+            "numberEntrants": 8,
+            "guaranteedMinMatches": 3,
+            "venueFee": 25,
+            "entryFee": 25,
+            "prizePool": 30000
+          },
+          "entrants": [
+            {
+              "entrantID": "SF1",
+              "entrantTag": "PunkDaGod#US",
+              "initialSeed": 1,
+              "eloRating": 2210,
+              "mainCharacter": "Cammy",
+              "country": "US",
+              "teamName": "FlyQuest",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "SF2",
+              "entrantTag": "AngryBird#AE",
+              "initialSeed": 2,
+              "eloRating": 2175,
+              "mainCharacter": "Ken Masters",
+              "country": "AE",
+              "teamName": "NASR",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "SF3",
+              "entrantTag": "Tokido#JP",
+              "initialSeed": 3,
+              "eloRating": 2140,
+              "mainCharacter": "Akuma",
+              "country": "JP",
+              "teamName": "REJECT",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "SF4",
+              "entrantTag": "Xiaohai#CN",
+              "initialSeed": 4,
+              "eloRating": 2130,
+              "mainCharacter": "M. Bison",
+              "country": "CN",
+              "teamName": "KSG",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "SF5",
+              "entrantTag": "BigBird#AE",
+              "initialSeed": 5,
+              "eloRating": 2080,
+              "mainCharacter": "Rashid",
+              "country": "AE",
+              "teamName": "RedBull",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "SF6",
+              "entrantTag": "Leshar#KR",
+              "initialSeed": 6,
+              "eloRating": 2060,
+              "mainCharacter": "Ed",
+              "country": "KR",
+              "teamName": "DRX",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "SF7",
+              "entrantTag": "EndingWalker#UK",
+              "initialSeed": 7,
+              "eloRating": 2020,
+              "mainCharacter": "Terry Bogard",
+              "country": "GB",
+              "teamName": "MOUZ",
+              "checkedIn": true
+            },
+            {
+              "entrantID": "SF8",
+              "entrantTag": "Niklauss#KR1",
+              "initialSeed": 8,
+              "eloRating": 1995,
+              "mainCharacter": "Luke",
+              "country": "CO",
+              "teamName": "Nexus Latam",
+              "checkedIn": true
+            }
+          ],
+          "sets": [
+            {
+              "setID": "DE-WQF1",
+              "phase": "WINNERS",
+              "round": 1,
+              "roundLabel": "Winners Cuartos 1",
+              "bestOf": 3,
+              "entrant1ID": "SF1",
+              "entrant2ID": "SF8",
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "READY",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "DE-WSF1",
+              "nextLoseSetID": "DE-LR1-1",
+              "nextWinSlot": 1,
+              "nextLoseSlot": 1,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-01",
+                "isStream": true,
+                "position3D": [
+                  -10.5,
+                  9,
+                  0
+                ]
+              }
+            },
+            {
+              "setID": "DE-WQF2",
+              "phase": "WINNERS",
+              "round": 1,
+              "roundLabel": "Winners Cuartos 2",
+              "bestOf": 3,
+              "entrant1ID": "SF4",
+              "entrant2ID": "SF5",
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "READY",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "DE-WSF1",
+              "nextLoseSetID": "DE-LR1-1",
+              "nextWinSlot": 2,
+              "nextLoseSlot": 2,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-02",
+                "isStream": false,
+                "position3D": [
+                  -10.5,
+                  6.6,
+                  0
+                ]
+              }
+            },
+            {
+              "setID": "DE-WQF3",
+              "phase": "WINNERS",
+              "round": 1,
+              "roundLabel": "Winners Cuartos 3",
+              "bestOf": 3,
+              "entrant1ID": "SF2",
+              "entrant2ID": "SF7",
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "READY",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "DE-WSF2",
+              "nextLoseSetID": "DE-LR1-2",
+              "nextWinSlot": 1,
+              "nextLoseSlot": 1,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-03",
+                "isStream": false,
+                "position3D": [
+                  -10.5,
+                  4.2,
+                  0
+                ]
+              }
+            },
+            {
+              "setID": "DE-WQF4",
+              "phase": "WINNERS",
+              "round": 1,
+              "roundLabel": "Winners Cuartos 4",
+              "bestOf": 3,
+              "entrant1ID": "SF3",
+              "entrant2ID": "SF6",
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "READY",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "DE-WSF2",
+              "nextLoseSetID": "DE-LR1-2",
+              "nextWinSlot": 2,
+              "nextLoseSlot": 2,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-04",
+                "isStream": false,
+                "position3D": [
+                  -10.5,
+                  1.8,
+                  0
+                ]
+              }
+            },
+            {
+              "setID": "DE-WSF1",
+              "phase": "WINNERS",
+              "round": 2,
+              "roundLabel": "Winners Semifinal A",
+              "bestOf": 3,
+              "entrant1ID": null,
+              "entrant2ID": null,
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "WAITING",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "DE-WF",
+              "nextLoseSetID": "DE-LR2-1",
+              "nextWinSlot": 1,
+              "nextLoseSlot": 1,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-01",
+                "isStream": true,
+                "position3D": [
+                  -2.5,
+                  7.8,
+                  0
+                ]
+              }
+            },
+            {
+              "setID": "DE-WSF2",
+              "phase": "WINNERS",
+              "round": 2,
+              "roundLabel": "Winners Semifinal B",
+              "bestOf": 3,
+              "entrant1ID": null,
+              "entrant2ID": null,
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "WAITING",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "DE-WF",
+              "nextLoseSetID": "DE-LR2-2",
+              "nextWinSlot": 2,
+              "nextLoseSlot": 1,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-02",
+                "isStream": false,
+                "position3D": [
+                  -2.5,
+                  3,
+                  0
+                ]
+              }
+            },
+            {
+              "setID": "DE-WF",
+              "phase": "WINNERS",
+              "round": 3,
+              "roundLabel": "Winners Final",
+              "bestOf": 5,
+              "entrant1ID": null,
+              "entrant2ID": null,
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "WAITING",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "DE-GF",
+              "nextLoseSetID": "DE-LF",
+              "nextWinSlot": 1,
+              "nextLoseSlot": 1,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-01",
+                "isStream": true,
+                "position3D": [
+                  5.5,
+                  5.4,
+                  0
+                ]
+              }
+            },
+            {
+              "setID": "DE-LR1-1",
+              "phase": "LOSERS",
+              "round": 1,
+              "roundLabel": "Losers Ronda 1A",
+              "bestOf": 3,
+              "entrant1ID": null,
+              "entrant2ID": null,
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "WAITING",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "DE-LR2-1",
+              "nextLoseSetID": null,
+              "nextWinSlot": 2,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-05",
+                "isStream": false,
+                "position3D": [
+                  -6.5,
+                  -2.6,
+                  -2.6
+                ]
+              }
+            },
+            {
+              "setID": "DE-LR1-2",
+              "phase": "LOSERS",
+              "round": 1,
+              "roundLabel": "Losers Ronda 1B",
+              "bestOf": 3,
+              "entrant1ID": null,
+              "entrant2ID": null,
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "WAITING",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "DE-LR2-2",
+              "nextLoseSetID": null,
+              "nextWinSlot": 2,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-06",
+                "isStream": false,
+                "position3D": [
+                  -6.5,
+                  -5.2,
+                  -2.6
+                ]
+              }
+            },
+            {
+              "setID": "DE-LR2-1",
+              "phase": "LOSERS",
+              "round": 2,
+              "roundLabel": "Losers Ronda 2A",
+              "bestOf": 3,
+              "entrant1ID": null,
+              "entrant2ID": null,
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "WAITING",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "DE-LSF",
+              "nextLoseSetID": null,
+              "nextWinSlot": 1,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-05",
+                "isStream": false,
+                "position3D": [
+                  -0.5,
+                  -6.2,
+                  -2.6
+                ]
+              }
+            },
+            {
+              "setID": "DE-LR2-2",
+              "phase": "LOSERS",
+              "round": 2,
+              "roundLabel": "Losers Ronda 2B",
+              "bestOf": 3,
+              "entrant1ID": null,
+              "entrant2ID": null,
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "WAITING",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "DE-LSF",
+              "nextLoseSetID": null,
+              "nextWinSlot": 2,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-06",
+                "isStream": false,
+                "position3D": [
+                  -0.5,
+                  -8.8,
+                  -2.6
+                ]
+              }
+            },
+            {
+              "setID": "DE-LSF",
+              "phase": "LOSERS",
+              "round": 3,
+              "roundLabel": "Losers Semifinal (R3)",
+              "bestOf": 3,
+              "entrant1ID": null,
+              "entrant2ID": null,
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "WAITING",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "DE-LF",
+              "nextLoseSetID": null,
+              "nextWinSlot": 2,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-03",
+                "isStream": false,
+                "position3D": [
+                  5.5,
+                  -9.8,
+                  -2.6
+                ]
+              }
+            },
+            {
+              "setID": "DE-LF",
+              "phase": "LOSERS",
+              "round": 4,
+              "roundLabel": "Losers Final",
+              "bestOf": 5,
+              "entrant1ID": null,
+              "entrant2ID": null,
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "WAITING",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "DE-GF",
+              "nextLoseSetID": null,
+              "nextWinSlot": 2,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "EST-02",
+                "isStream": true,
+                "position3D": [
+                  11.5,
+                  -5.8,
+                  -2
+                ]
+              }
+            },
+            {
+              "setID": "DE-GF",
+              "phase": "GRAND_FINAL",
+              "round": 5,
+              "roundLabel": "Grand Final",
+              "bestOf": 5,
+              "entrant1ID": null,
+              "entrant2ID": null,
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "WAITING",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": "DE-GF-RESET",
+              "nextLoseSetID": null,
+              "nextWinSlot": 1,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "STAGE-MAIN",
+                "isStream": true,
+                "position3D": [
+                  17.5,
+                  1.2,
+                  0.8
+                ]
+              }
+            },
+            {
+              "setID": "DE-GF-RESET",
+              "phase": "GRAND_FINAL_RESET",
+              "round": 6,
+              "roundLabel": "Grand Final Reset",
+              "bestOf": 5,
+              "entrant1ID": null,
+              "entrant2ID": null,
+              "entrant1Score": 0,
+              "entrant2Score": 0,
+              "status": "WAITING",
+              "winnerID": null,
+              "loserID": null,
+              "nextWinSetID": null,
+              "nextLoseSetID": null,
+              "games": [],
+              "updatedAt": "2026-10-23T00:39:20.884Z",
+              "other": {
+                "station": "STAGE-MAIN",
+                "isStream": true,
+                "position3D": [
+                  23.5,
+                  1.2,
+                  0.8
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
