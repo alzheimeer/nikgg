@@ -25,15 +25,18 @@ import {
   Camera,
   Check,
   Clock,
+  MessageSquare,
   Pause,
   Play,
   Plus,
   RotateCcw,
+  Send,
   ShieldAlert,
   Shuffle,
   Trash2,
   Trophy,
   Tv,
+  Upload,
   UserCheck,
   Zap,
 } from 'lucide-react';
@@ -440,6 +443,8 @@ export const RefereeStationConsole: React.FC<RefereeStationConsoleProps> = ({
   );
   const [aiAnalysisText, setAiAnalysisText] = useState<string>('');
   const [verifyingAi, setVerifyingAi] = useState<boolean>(false);
+  const [ocrAutoApply, setOcrAutoApply] = useState<boolean>(false);
+  const [ocrJobId, setOcrJobId] = useState<string>('');
 
   // Timer Reglamentario de 3 Minutos (180s) para Check-in / Disputa de Partida (REFEREE / POOL_CAPTAIN)
   const [disputeTimerSeconds, setDisputeTimerSeconds] = useState<number>(180);
@@ -449,6 +454,54 @@ export const RefereeStationConsole: React.FC<RefereeStationConsoleProps> = ({
   const [pickemVotes, setPickemVotes] = useState<
     Record<string, { p1Votes: number; p2Votes: number; myPick?: 1 | 2 }>
   >({});
+  const [pickemLeaderboard, setPickemLeaderboard] = useState<
+    Array<{
+      userUid: string;
+      gamerTag: string;
+      displayName: string;
+      country: string;
+      correctPicks: number;
+      totalPicks: number;
+      points: number;
+      streak: number;
+      lastPickText: string;
+    }>
+  >([]);
+
+  // Sistema de Comentarios y Discusión por Set / Partida
+  const [setComments, setSetComments] = useState<
+    Array<{
+      id: string;
+      authorTag: string;
+      authorRole: UserRole;
+      text: string;
+      createdAt: string;
+    }>
+  >([]);
+  const [newCommentText, setNewCommentText] = useState<string>('');
+  const [postingComment, setPostingComment] = useState<boolean>(false);
+
+  useEffect(() => {
+    const slug = obf.event.tournamentSlug;
+    fetch(`/api/tournaments/${encodeURIComponent(slug)}/pickems`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.leaderboard) setPickemLeaderboard(d.leaderboard);
+      })
+      .catch(() => {});
+  }, [obf.event.tournamentSlug]);
+
+  useEffect(() => {
+    const slug = obf.event.tournamentSlug;
+    fetch(
+      `/api/tournaments/${encodeURIComponent(slug)}/sets/${encodeURIComponent(selectedSet.setID)}/comments`
+    )
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.comments) setSetComments(d.comments);
+      })
+      .catch(() => {});
+  }, [obf.event.tournamentSlug, selectedSet.setID]);
 
   useEffect(() => {
     setScore1(selectedSet.entrant1Score);
@@ -535,7 +588,7 @@ export const RefereeStationConsole: React.FC<RefereeStationConsoleProps> = ({
   const p1PickPct = Math.round((currentPickem.p1Votes / totalPickemVotes) * 100);
   const p2PickPct = 100 - p1PickPct;
 
-  const handleVotePickem = (slot: 1 | 2) => {
+  const handleVotePickem = async (slot: 1 | 2) => {
     setPickemVotes((prev) => {
       const existing = prev[selectedSet.setID] || currentPickem;
       if (existing.myPick === slot) return prev;
@@ -548,6 +601,55 @@ export const RefereeStationConsole: React.FC<RefereeStationConsoleProps> = ({
         },
       };
     });
+
+    try {
+      const pickedTag = slot === 1 ? p1?.entrantTag : p2?.entrantTag;
+      const res = await fetch(
+        `/api/tournaments/${encodeURIComponent(obf.event.tournamentSlug)}/pickems/vote`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            gamerTag: myGamerTag || 'Spectator#PRO',
+            setID: selectedSet.setID,
+            pickedWinnerTag: pickedTag,
+          }),
+        }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data.leaderboard) setPickemLeaderboard(data.leaderboard);
+      }
+    } catch {
+      // Ignore network error on pick-em vote
+    }
+  };
+
+  const handlePostSetComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCommentText.trim()) return;
+    setPostingComment(true);
+    try {
+      const res = await fetch(
+        `/api/tournaments/${encodeURIComponent(obf.event.tournamentSlug)}/sets/${encodeURIComponent(selectedSet.setID)}/comments`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            authorTag: myGamerTag || 'Spectator#OBF',
+            authorRole: activeRole,
+            text: newCommentText.trim(),
+          }),
+        }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data.comments) setSetComments(data.comments);
+        setNewCommentText('');
+      }
+    } finally {
+      setPostingComment(false);
+    }
   };
 
   const maxWins = Math.ceil(selectedSet.bestOf / 2);
@@ -1079,62 +1181,130 @@ export const RefereeStationConsole: React.FC<RefereeStationConsoleProps> = ({
         </div>
       </div>
 
-      {/* Foto de Victoria / Verificación Multimodal con DeepSeek-VL */}
-      <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 space-y-2">
-        <div className="flex items-center justify-between text-xs">
-          <span className="text-slate-300 font-medium">
-            Adjuntar Foto de Victoria / Verificación por Visión (DeepSeek-VL)
-          </span>
-          {aiConfidence !== undefined && (
-            <span className="font-mono tabular-nums text-emerald-400">
-              Confianza IA: {(aiConfidence * 100).toFixed(1)}%
+      {/* Foto de Victoria / Worker Autónomo Multimodal DeepSeek-VL (OCR Gamertags + Marcador) */}
+      <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div className="flex items-center gap-1.5">
+            <Camera className="w-3.5 h-3.5 text-sky-400" />
+            <span className="text-white font-semibold">
+              Worker Autónomo DeepSeek-VL (Extracción OCR de Gamertags y Marcador)
             </span>
-          )}
+          </div>
+          <div className="flex items-center gap-2">
+            {ocrJobId && (
+              <span className="px-2 py-0.5 rounded bg-sky-500/15 border border-sky-500/30 font-mono text-[10px] text-sky-300">
+                BullMQ: {ocrJobId}
+              </span>
+            )}
+            {aiConfidence !== undefined && (
+              <span className="font-mono tabular-nums text-emerald-400 font-semibold">
+                Confianza OCR: {(aiConfidence * 100).toFixed(1)}%
+              </span>
+            )}
+          </div>
         </div>
-        <div className="flex gap-2">
+
+        <div className="flex flex-wrap items-center gap-2">
           <input
             type="text"
             value={proofUrl}
             disabled={!canReportScores}
             onChange={(e) => setProofUrl(e.target.value)}
-            placeholder="URL o captura de victoria adjunta..."
-            className="flex-1 rounded-lg border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs font-mono text-white disabled:opacity-50"
+            placeholder="URL o nombre de captura de pantalla HUD..."
+            className="flex-1 min-w-[180px] rounded-lg border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs font-mono text-white disabled:opacity-50"
           />
+
+          <label
+            className={`px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-900 hover:bg-slate-800 text-xs font-medium text-slate-200 flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
+              !canReportScores ? 'opacity-40 pointer-events-none' : ''
+            }`}
+            title="Subir foto/captura desde el dispositivo para procesarla con el Worker DeepSeek-VL"
+          >
+            <Upload className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Subir Foto</span>
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              disabled={!canReportScores}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  setProofUrl(file.name);
+                }
+              }}
+            />
+          </label>
+
           <button
             type="button"
             disabled={!canReportScores || verifyingAi || !p1 || !p2}
             onClick={async () => {
               setVerifyingAi(true);
               try {
-                const res = await onVerifyVisionAi(selectedSet.setID, proofUrl);
-                setScore1(res.detectedScore1);
-                setScore2(res.detectedScore2);
-                setAiConfidence(res.confidence);
-                setAiAnalysisText(res.analysisSummary);
+                const resp = await fetch('/api/ai/vision-referee', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    slug: obf.event.tournamentSlug,
+                    setId: selectedSet.setID,
+                    proofImageUrl: proofUrl,
+                    imageName: proofUrl,
+                    autoApply: ocrAutoApply,
+                  }),
+                });
+                if (resp.ok) {
+                  const data = await resp.json();
+                  setScore1(data.detectedScore1);
+                  setScore2(data.detectedScore2);
+                  setAiConfidence(data.confidence);
+                  setAiAnalysisText(data.analysisSummary);
+                  if (data.job?.jobId) setOcrJobId(data.job.jobId);
+                } else {
+                  const res = await onVerifyVisionAi(selectedSet.setID, proofUrl);
+                  setScore1(res.detectedScore1);
+                  setScore2(res.detectedScore2);
+                  setAiConfidence(res.confidence);
+                  setAiAnalysisText(res.analysisSummary);
+                }
               } finally {
                 setVerifyingAi(false);
               }
             }}
-            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-xs font-medium text-sky-300 flex items-center gap-1.5 whitespace-nowrap shrink-0"
+            className="px-3 py-1.5 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/50 disabled:opacity-40 text-xs font-semibold text-sky-200 flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
           >
             <Camera className="w-3.5 h-3.5" />
-            {verifyingAi ? 'Analizando...' : 'Validar Captura'}
+            {verifyingAi ? 'Ejecutando OCR...' : 'Ejecutar Worker OCR'}
           </button>
         </div>
+
+        <label className="flex items-center gap-2 text-[11px] text-slate-300 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={ocrAutoApply}
+            disabled={!canReportScores}
+            onChange={(e) => setOcrAutoApply(e.target.checked)}
+            className="accent-sky-400"
+          />
+          <span>
+            Auto-aplicar resultado al árbol DAG O(1) si la confianza de DeepSeek-VL supera el 98%
+          </span>
+        </label>
+
         {aiAnalysisText && (
-          <p className="text-[11px] text-slate-300 leading-relaxed pt-1">
+          <div className="p-2.5 rounded-lg border border-emerald-500/30 bg-emerald-950/20 text-[11px] text-emerald-200 leading-relaxed font-mono">
             {aiAnalysisText}
-          </p>
+          </div>
         )}
       </div>
 
-      {/* Quinielas / Predicciones en Vivo (Pick-ems para SPECTATOR y Público General) */}
+      {/* Quinielas / Predicciones en Vivo (Pick-ems) + Tabla de Posiciones Pública de Pick-ems */}
       {p1 && p2 && (
-        <div className="p-3 rounded-lg border border-slate-800 bg-slate-950/90 space-y-2 text-xs">
+        <div className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/90 space-y-3 text-xs">
           <div className="flex items-center justify-between">
             <span className="font-semibold text-slate-200 flex items-center gap-1.5">
               <Trophy className="w-3.5 h-3.5 text-amber-400" />
-              Quiniela en Vivo (Spectator Pick-ems & Votación)
+              Quiniela en Vivo & Ranking Público de Pick-ems
             </span>
             <span className="font-mono text-[11px] text-slate-400">
               {totalPickemVotes} votos en tiempo real
@@ -1168,8 +1338,83 @@ export const RefereeStationConsole: React.FC<RefereeStationConsoleProps> = ({
               <span className="font-mono text-rose-400 ml-2">{p2PickPct}%</span>
             </button>
           </div>
+
+          {pickemLeaderboard.length > 0 && (
+            <div className="pt-2 border-t border-slate-800/80 space-y-1.5">
+              <div className="text-[11px] font-mono text-amber-300 font-semibold">
+                Top Oráculos de la Comunidad (Pick-em Leaderboard):
+              </div>
+              <div className="space-y-1">
+                {pickemLeaderboard.slice(0, 4).map((entry, idx) => (
+                  <div
+                    key={entry.userUid + idx}
+                    className="flex items-center justify-between text-[11px] py-1 px-2 rounded bg-slate-900/90 border border-slate-800/70"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="font-mono font-bold text-amber-400">#{idx + 1}</span>
+                      <span className="font-semibold text-white truncate">{entry.gamerTag}</span>
+                      <span className="text-slate-400 font-mono text-[10px]">
+                        ({entry.correctPicks}/{entry.totalPicks} aciertos · Racha {entry.streak}🔥)
+                      </span>
+                    </div>
+                    <span className="font-mono font-bold text-emerald-400 shrink-0">
+                      {entry.points} pts
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
+
+      {/* Sistema de Comentarios y Discusión en Vivo de la Partida / Set */}
+      <div className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/90 space-y-2.5 text-xs">
+        <div className="flex items-center justify-between">
+          <span className="font-semibold text-white flex items-center gap-1.5">
+            <MessageSquare className="w-3.5 h-3.5 text-sky-400" />
+            Hilo de Comentarios y Discusión del Set ({selectedSet.setID})
+          </span>
+          <span className="font-mono text-[10px] text-slate-400">
+            {setComments.length} comentarios
+          </span>
+        </div>
+
+        <div className="space-y-1.5 max-h-32 overflow-y-auto pr-1">
+          {setComments.map((c) => (
+            <div
+              key={c.id}
+              className="p-2 rounded-lg bg-slate-900 border border-slate-800/80 text-[11px]"
+            >
+              <div className="flex items-center justify-between font-mono text-[10px] text-slate-400 mb-0.5">
+                <span className="text-sky-300 font-semibold">
+                  {c.authorTag} [{c.authorRole}]
+                </span>
+                <span>{new Date(c.createdAt).toLocaleTimeString()}</span>
+              </div>
+              <p className="text-slate-200">{c.text}</p>
+            </div>
+          ))}
+        </div>
+
+        <form onSubmit={handlePostSetComment} className="flex gap-2">
+          <input
+            type="text"
+            value={newCommentText}
+            onChange={(e) => setNewCommentText(e.target.value)}
+            placeholder="Comentar sobre el matchup, estación o arbitraje de este set..."
+            className="flex-1 rounded-lg border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs text-white"
+          />
+          <button
+            type="submit"
+            disabled={postingComment || !newCommentText.trim()}
+            className="px-3 py-1.5 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/40 text-sky-200 font-semibold text-xs flex items-center gap-1 shrink-0 cursor-pointer disabled:opacity-40"
+          >
+            <Send className="w-3 h-3" />
+            Publicar
+          </button>
+        </form>
+      </div>
 
       {/* Botones de Acción Arbitral / Reporte */}
       <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800">

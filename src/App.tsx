@@ -65,6 +65,7 @@ import {
 } from './components/PublicLandingAndStartHub';
 import { TournamentGoogleMeetPanel } from './components/TournamentGoogleMeetPanel';
 import { CircuitsAndMassiveScaleView } from './components/CircuitsAndMassiveScaleView';
+import { EnterpriseEcosystemHub } from './components/EnterpriseEcosystemHub';
 import { auth, firebaseSignOut, onAuthStateChanged } from './lib/firebase';
 import {
   Bell,
@@ -1993,23 +1994,41 @@ export default function App() {
           />
         )}
 
-        {/* VISTA 4: ANALÍTICA EN TIEMPO REAL, BENCHMARK DAG O(1) Y REDIS CACHE */}
+        {/* VISTA 4: ANALÍTICA EN TIEMPO REAL, BENCHMARK DAG O(1), REDIS CACHE & ECOSISTEMA ENTERPRISE */}
         {activeTab === 'analytics' && (
-          <AnalyticsAndBenchmarkView
-            obf={obf}
-            standings={standings}
-            redis={redisTelemetry}
-            onFlushRedis={async () => {
-              const res = await fetch('/api/redis/flush', { method: 'POST' });
-              if (res.ok) {
-                const data = await res.json();
-                setRedisTelemetry(data.redis);
-              }
-            }}
-            onRunAiAudit={handleRunAiAudit}
-            aiAuditReport={aiAuditReport}
-            aiAuditLoading={aiAuditLoading}
-          />
+          <div className="flex flex-col gap-6">
+            <EnterpriseEcosystemHub
+              obf={obf}
+              standings={standings}
+              activeTournamentSlug={activeTournamentSlug}
+              currentUserGamerTag={currentUser?.gamerTag || 'Niklauss#KR1'}
+              onTournamentUpdated={(updatedDoc, updatedStandings) => {
+                setObf(updatedDoc);
+                if (updatedStandings) setStandings(updatedStandings);
+                fetchBootstrap(activeTournamentSlug);
+              }}
+              onSelectSetAndOpenReferee={(targetSetId) => {
+                setSelectedSetID(targetSetId);
+                handleNavigateTab('reporter');
+              }}
+            />
+
+            <AnalyticsAndBenchmarkView
+              obf={obf}
+              standings={standings}
+              redis={redisTelemetry}
+              onFlushRedis={async () => {
+                const res = await fetch('/api/redis/flush', { method: 'POST' });
+                if (res.ok) {
+                  const data = await res.json();
+                  setRedisTelemetry(data.redis);
+                }
+              }}
+              onRunAiAudit={handleRunAiAudit}
+              aiAuditReport={aiAuditReport}
+              aiAuditLoading={aiAuditLoading}
+            />
+          </div>
         )}
 
         {/* VISTA 5: USUARIOS, ROLES RBAC, PAGOS QR, AUDITORÍA, DEEPSEEK API KEY, 2FA, TOKENS & CLOUD BACKUPS */}
