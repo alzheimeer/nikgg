@@ -626,6 +626,35 @@ export const PublicLandingAndStartHub: React.FC<PublicLandingAndStartHubProps> =
                             : 'No estás inscrito como competidor en este bracket aún.'}
                         </div>
                       )}
+                      {item.event?.googleMeet && (
+                        <div className="p-2 rounded-lg border border-emerald-500/30 bg-emerald-950/20 text-xs flex items-center justify-between gap-2">
+                          <div className="truncate">
+                            <span className="font-semibold text-emerald-300">
+                              Google Meet (Opcional):
+                            </span>{' '}
+                            <span className="font-mono text-[11px] text-slate-300">
+                              {item.event.googleMeet.meetingCode}
+                            </span>
+                          </div>
+                          {myEntrant ||
+                          roleCtx.role === 'TOURNAMENT_DIRECTOR' ||
+                          roleCtx.role === 'SUPER_ADMIN' ||
+                          roleCtx.role === 'REFEREE' ? (
+                            <a
+                              href={item.event.googleMeet.meetingUri}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="shrink-0 px-2.5 py-1 rounded bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[11px]"
+                            >
+                              Unirse al Meet
+                            </a>
+                          ) : (
+                            <span className="shrink-0 text-[10px] font-semibold text-amber-300">
+                              Solo inscritos
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-800">

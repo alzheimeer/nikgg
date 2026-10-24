@@ -11,6 +11,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   INITIAL_24_ENTRANTS_TEKKEN,
+  DoubleDqRule,
+  LosersBracketDqPenalty,
   OBFDocument,
   OBFEntrant,
   OBFEventMetadata,
@@ -23,6 +25,7 @@ import {
   UserRole,
   applyInitial24Simulation,
   generateSetsByFormat,
+  isSetCompletedOrDq,
 } from './engine/nikBracketsEngine';
 import {
   ESPORTS_GAMES_CATALOG,
@@ -60,6 +63,8 @@ import {
   PublicLandingAndStartHub,
   type TournamentSummaryCardData,
 } from './components/PublicLandingAndStartHub';
+import { TournamentGoogleMeetPanel } from './components/TournamentGoogleMeetPanel';
+import { CircuitsAndMassiveScaleView } from './components/CircuitsAndMassiveScaleView';
 import { auth, firebaseSignOut, onAuthStateChanged } from './lib/firebase';
 import {
   Bell,
@@ -129,8 +134,9 @@ export default function App() {
 
   // Navegación principal: inicia en 'landing' (Landing Page Pública / Start.gg Hub)
   const [activeTab, setActiveTab] = useState<
-    'landing' | 'brackets' | 'participants' | 'reporter' | 'analytics' | 'admin'
+    'landing' | 'brackets' | 'participants' | 'reporter' | 'circuits' | 'analytics' | 'admin'
   >('landing');
+  const [activeMassivePoolCode, setActiveMassivePoolCode] = useState<string>('MAIN_BRACKET');
   const [activeRole, setActiveRole] = useState<UserRole>('SPECTATOR');
   const [locale, setLocale] = useState<SupportedLocale>('es');
   const t = TRANSLATIONS[locale];
@@ -204,13 +210,23 @@ export default function App() {
   const [compactDensity, setCompactDensity] = useState<boolean>(false);
   const [highContrastMode, setHighContrastMode] = useState<boolean>(false);
 
-  // Modal de Creación de Torneo
+  // Modal de Creación de Torneo (Wizard con Paso 1 y Paso 2 de Check-In & DQ)
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
+  const [createWizardStep, setCreateWizardStep] = useState<1 | 2>(1);
   const [newTourneyName, setNewTourneyName] = useState<string>('Copa Mundial OBF 2026');
   const [newTourneyGameSlug, setNewTourneyGameSlug] = useState<string>('tekken8');
   const [newTourneyFormat, setNewTourneyFormat] = useState<TournamentFormat>('two_stage');
   const [newTourneyEntrants, setNewTourneyEntrants] = useState<number>(8);
   const [newTourneyPrize, setNewTourneyPrize] = useState<number>(25000);
+  // Paso 2 del Wizard: Reglas de Check-In por Pelea y Descalificación Automática
+  const [newTourneyEnableMatchCheckIn, setNewTourneyEnableMatchCheckIn] = useState<boolean>(true);
+  const [newTourneyCheckInTimeoutMinutes, setNewTourneyCheckInTimeoutMinutes] = useState<number>(5);
+  const [newTourneyEnableAutoDq, setNewTourneyEnableAutoDq] = useState<boolean>(true);
+  const [newTourneyDoubleDqRule, setNewTourneyDoubleDqRule] =
+    useState<DoubleDqRule>('AUTO_BYE_NEXT_ROUND');
+  const [newTourneyLosersPenalty, setNewTourneyLosersPenalty] =
+    useState<LosersBracketDqPenalty>('DROP_TO_LOSERS');
+  const [dashboardCountdownTick, setDashboardCountdownTick] = useState<number>(() => Date.now());
 
   // Estado IA DeepSeek (Narrativa Caster & Auditoría)
   const [casterNarrative, setCasterNarrative] = useState<string>('');
@@ -331,7 +347,10 @@ export default function App() {
     fetchBootstrap();
   }, [fetchBootstrap]);
 
-  // Escuchar sesión de Firebase Auth (Google Sign-In)
+  const activeSlugRef = useRef(activeTournamentSlug);
+  activeSlugRef.current = activeTournamentSlug;
+
+  // Escuchar sesión de Firebase Auth (Google Sign-In) una sola vez al montar sin causar bucles al cambiar de pestaña o token
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       if (fbUser) {
@@ -346,10 +365,13 @@ export default function App() {
           });
           if (res.ok) {
             const data = await res.json();
-            setCurrentUser(data.user);
+            if (data.user) {
+              setCurrentUser(data.user);
+            }
             setAuthToken(idToken);
-            await fetchUsersAndRbacData(idToken, activeTournamentSlug);
-            await fetchBootstrap(activeTournamentSlug);
+            const currentSlug = activeSlugRef.current;
+            await fetchUsersAndRbacData(idToken, currentSlug);
+            await fetchBootstrap(currentSlug);
           }
         } catch {
           // Ignore and allow manual login
@@ -357,7 +379,8 @@ export default function App() {
       }
     });
     return () => unsubscribe();
-  }, [activeTournamentSlug, fetchUsersAndRbacData, fetchBootstrap]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /**
    * Calcula dinámicamente el rol del usuario en cualquier torneo específico (Start.gg RBAC):
@@ -394,7 +417,7 @@ export default function App() {
         };
       }
 
-      const normalizeTag = (val: string) => val.trim().toLowerCase();
+      const normalizeTag = (val?: string | null) => (val || '').trim().toLowerCase();
       const myEntrant =
         entrantsPool.find(
           (e) =>
@@ -646,13 +669,46 @@ export default function App() {
     }
   };
 
+  // Navegación centralizada del menú superior: cambia la vista activa, cierra modales/drawers abiertos y posiciona la vista al inicio
+  const handleNavigateTab = useCallback(
+    (
+      targetTab:
+        | 'landing'
+        | 'brackets'
+        | 'participants'
+        | 'reporter'
+        | 'circuits'
+        | 'analytics'
+        | 'admin'
+    ) => {
+      setActiveTab(targetTab);
+      setShowAuthModal(false);
+      setShowCreateModal(false);
+      setEnrollModalTargetSlug(null);
+      setShowNotificationsDrawer(false);
+      setShowThemeDrawer(false);
+      setReportErrorBanner('');
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    },
+    []
+  );
+
   const handleSelectTournamentAndNavigate = async (
     slug: string,
-    targetTab: 'brackets' | 'participants' | 'reporter' | 'analytics' | 'admin',
+    targetTab:
+      | 'landing'
+      | 'brackets'
+      | 'participants'
+      | 'reporter'
+      | 'circuits'
+      | 'analytics'
+      | 'admin',
     targetSetID?: string
   ) => {
     await handleSelectTournament(slug, targetSetID);
-    setActiveTab(targetTab);
+    handleNavigateTab(targetTab);
   };
 
   const handleFormatChange = async (format: TournamentFormat) => {
@@ -692,14 +748,130 @@ export default function App() {
         format: newTourneyFormat,
         entrantCount: newTourneyEntrants,
         prizePool: newTourneyPrize,
+        enableMatchCheckIn: newTourneyEnableMatchCheckIn,
+        matchCheckInTimeoutMinutes: newTourneyCheckInTimeoutMinutes,
+        enableAutoDq: newTourneyEnableAutoDq,
+        doubleDqRule: newTourneyDoubleDqRule,
+        losersBracketDqPenalty: newTourneyLosersPenalty,
       }),
     });
     if (res.ok) {
       const data = await res.json();
       setShowCreateModal(false);
+      setCreateWizardStep(1);
       await fetchBootstrap(data.slug);
       await fetchUsersAndRbacData(authToken, data.slug);
       setActiveTab('brackets');
+    }
+  };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDashboardCountdownTick(Date.now());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleMatchCheckIn = async (setID: string, slot: 1 | 2 | 'BOTH' = 'BOTH') => {
+    try {
+      const res = await fetch(
+        `/api/tournaments/${encodeURIComponent(activeTournamentSlug)}/sets/${encodeURIComponent(setID)}/checkin`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+          },
+          body: JSON.stringify({ slot }),
+        }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data.obf) setObf(data.obf);
+        if (data.standings) setStandings(data.standings);
+      } else {
+        // Fallback motor local
+        localEngineRef.current.performMatchCheckIn(setID, slot);
+        setObf(localEngineRef.current.getDocument());
+        setStandings(localEngineRef.current.getStandings());
+      }
+    } catch {
+      localEngineRef.current.performMatchCheckIn(setID, slot);
+      setObf(localEngineRef.current.getDocument());
+      setStandings(localEngineRef.current.getStandings());
+    }
+  };
+
+  const handleAdminCheckInAction = async (
+    setID: string,
+    action:
+      | 'FORCE_P1'
+      | 'FORCE_P2'
+      | 'FORCE_BOTH'
+      | 'RESET_CHECKIN'
+      | 'PAUSE_TIMER'
+      | 'RESUME_TIMER'
+      | 'REVERT_DQ'
+      | 'TRIGGER_TIMEOUT_NOW'
+  ) => {
+    try {
+      const res = await fetch(
+        `/api/tournaments/${encodeURIComponent(activeTournamentSlug)}/sets/${encodeURIComponent(setID)}/checkin-admin`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+          },
+          body: JSON.stringify({ action }),
+        }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data.obf) setObf(data.obf);
+        if (data.standings) setStandings(data.standings);
+      } else if (action === 'TRIGGER_TIMEOUT_NOW') {
+        localEngineRef.current.evaluateMatchCheckInTimeout(setID);
+        setObf(localEngineRef.current.getDocument());
+        setStandings(localEngineRef.current.getStandings());
+      } else {
+        localEngineRef.current.adminControlMatchCheckIn(setID, action);
+        setObf(localEngineRef.current.getDocument());
+        setStandings(localEngineRef.current.getStandings());
+      }
+    } catch {
+      if (action === 'TRIGGER_TIMEOUT_NOW') {
+        localEngineRef.current.evaluateMatchCheckInTimeout(setID);
+      } else {
+        localEngineRef.current.adminControlMatchCheckIn(setID, action);
+      }
+      setObf(localEngineRef.current.getDocument());
+      setStandings(localEngineRef.current.getStandings());
+    }
+  };
+
+  const handleSaveTournamentCheckInConfig = async (cfg: {
+    enableMatchCheckIn: boolean;
+    matchCheckInTimeoutMinutes: number;
+    enableAutoDq: boolean;
+    doubleDqRule: DoubleDqRule;
+    losersBracketDqPenalty: LosersBracketDqPenalty;
+  }) => {
+    const res = await fetch(
+      `/api/tournaments/${encodeURIComponent(activeTournamentSlug)}/checkin-config`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+        },
+        body: JSON.stringify(cfg),
+      }
+    );
+    if (res.ok) {
+      const data = await res.json();
+      if (data.obf) setObf(data.obf);
+      if (data.standings) setStandings(data.standings);
     }
   };
 
@@ -962,189 +1134,227 @@ export default function App() {
         highContrastMode ? 'bg-black text-white' : 'bg-[#090D16] text-slate-100'
       }`}
     >
-      {/* TOP BAR DE NAVEGACIÓN Y GESTIÓN DE SESIÓN / ROLES */}
-      <header className="flex flex-wrap items-center justify-between gap-4 px-6 py-3.5 border-b border-slate-800 bg-slate-950/95 sticky top-0 z-30">
-        {/* Zona 1: Brand Wordmark */}
-        <div className="flex items-center gap-3">
-          <a
-            href="#top"
-            onClick={(e) => {
-              e.preventDefault();
-              setActiveTab('landing');
-            }}
-            className="text-lg font-bold tracking-tight text-white whitespace-nowrap shrink-0 flex items-center gap-2"
-          >
-            <span>nikBrackets Pro</span>
-            <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30">
-              Start.gg OBF
-            </span>
-          </a>
-        </div>
+      {/* TOP BAR DE NAVEGACIÓN Y GESTIÓN DE SESIÓN / ROLES (ESTRUCTURA EN 2 FILAS SIN COLISIÓN AL LOGUEARSE) */}
+      <header className="sticky top-0 z-40 border-b border-slate-800 bg-slate-950/95 backdrop-blur-md shadow-lg">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6">
+          {/* Fila 1: Brand Wordmark + Indicador de Vista Activa + Botones de Cuenta / Sesión */}
+          <div className="flex flex-wrap items-center justify-between gap-3 py-2.5 border-b border-slate-800/80">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => handleNavigateTab('landing')}
+                className="text-lg font-bold tracking-tight text-white whitespace-nowrap shrink-0 flex items-center gap-2 cursor-pointer hover:opacity-90"
+              >
+                <span>nikBrackets Pro</span>
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30">
+                  Start.gg OBF
+                </span>
+              </button>
 
-        {/* Zona 2: Enlaces de Navegación */}
-        <nav className="hidden xl:flex items-center gap-5 text-xs font-medium text-slate-300">
-          <button
-            type="button"
-            onClick={() => setActiveTab('landing')}
-            className={`hover:text-white transition-colors whitespace-nowrap shrink-0 pb-1 flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'landing' ? 'text-white border-b-2 border-sky-400 font-semibold' : ''
-            }`}
+              <span className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-900 border border-slate-800 text-[11px] font-mono text-sky-300">
+                <span>Vista activa:</span>
+                <strong className="text-white">
+                  {activeTab === 'landing'
+                    ? currentUser
+                      ? 'Hub Start.gg (Mis Torneos)'
+                      : 'Inicio & Torneos'
+                    : activeTab === 'brackets'
+                    ? t.navBrackets
+                    : activeTab === 'participants'
+                    ? t.navParticipants
+                    : activeTab === 'reporter'
+                    ? t.navReporter
+                    : activeTab === 'circuits'
+                    ? 'Circuitos 6M & Masivos 3000+'
+                    : activeTab === 'analytics'
+                    ? t.navAnalytics
+                    : 'Admin Usuarios & Roles'}
+                </strong>
+              </span>
+            </div>
+
+            {/* Zona de Botones de Sesión, Perfil y Creación de Torneo */}
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              {!currentUser ? (
+                <>
+                  <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900 text-[11px] font-mono text-slate-400">
+                    <Eye className="w-3.5 h-3.5 text-sky-400" />
+                    Modo Espectador
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => handleOpenAuthModal('login')}
+                    className="px-3.5 py-1.5 rounded-lg bg-sky-400 hover:bg-sky-300 text-slate-950 text-xs font-bold flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
+                  >
+                    <LogIn className="w-3.5 h-3.5" />
+                    Iniciar Sesión
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleOpenAuthModal('register')}
+                    className="px-3.5 py-1.5 rounded-lg border border-sky-400/50 bg-sky-500/10 hover:bg-sky-500/20 text-sky-200 text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
+                  >
+                    <UserPlus className="w-3.5 h-3.5" />
+                    Registrarse
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => handleNavigateTab('admin')}
+                    className={`px-3 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer transition-colors ${
+                      activeTab === 'admin'
+                        ? 'border-amber-400 bg-amber-500/25 text-white'
+                        : 'border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-200'
+                    }`}
+                    title="Administración de Usuario: colocar o actualizar mis datos, IDs por consola (PS5/PC) y personaje MAIN"
+                  >
+                    <UserCheck className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Administración de Usuario</span>
+                    {!currentUser.profileCompleted && (
+                      <span className="px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-300 font-mono text-[9px]">
+                        Completar Datos
+                      </span>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateModal(true)}
+                    style={{ backgroundColor: accentColor }}
+                    className="px-3 py-1.5 text-xs font-semibold text-slate-950 rounded-lg hover:opacity-90 transition-opacity whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    {t.createTournament}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleOpenAuthModal('profile')}
+                    className="px-3 py-1.5 rounded-lg border border-sky-500/40 bg-slate-900 hover:bg-slate-800 text-xs text-sky-200 flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
+                    title="Ver o editar mi perfil competitivo"
+                  >
+                    <Shield className="w-3.5 h-3.5 text-sky-400" />
+                    <span className="font-semibold">
+                      {currentUser.gamerTag || currentUser.displayName || 'Mi Perfil'}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="px-3 py-1.5 rounded-lg border border-rose-500/40 bg-rose-950/40 hover:bg-rose-900/60 text-rose-200 text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
+                    title="Cerrar sesión activa y volver a modo espectador"
+                  >
+                    <LogOut className="w-3.5 h-3.5 text-rose-400" />
+                    Cerrar Sesión
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Fila 2: Menú Superior Principal Unificado (Visible en Desktop, Laptop, Tablet y Móvil) */}
+          <nav
+            aria-label="Navegación Principal"
+            className="flex items-center gap-1.5 overflow-x-auto py-2 no-scrollbar"
           >
-            <Compass className="w-3.5 h-3.5 text-sky-400" />
-            {currentUser ? 'Hub Start.gg (Mis Torneos)' : 'Inicio & Torneos'}
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('brackets')}
-            className={`hover:text-white transition-colors whitespace-nowrap shrink-0 pb-1 cursor-pointer ${
-              activeTab === 'brackets' ? 'text-white border-b-2 border-sky-400 font-semibold' : ''
-            }`}
-          >
-            {t.navBrackets}
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('participants')}
-            className={`hover:text-white transition-colors whitespace-nowrap shrink-0 pb-1 cursor-pointer ${
-              activeTab === 'participants' ? 'text-white border-b-2 border-sky-400 font-semibold' : ''
-            }`}
-          >
-            {t.navParticipants}
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('reporter')}
-            className={`hover:text-white transition-colors whitespace-nowrap shrink-0 pb-1 cursor-pointer ${
-              activeTab === 'reporter' ? 'text-white border-b-2 border-sky-400 font-semibold' : ''
-            }`}
-          >
-            {t.navReporter}
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('analytics')}
-            className={`hover:text-white transition-colors whitespace-nowrap shrink-0 pb-1 cursor-pointer ${
-              activeTab === 'analytics' ? 'text-white border-b-2 border-sky-400 font-semibold' : ''
-            }`}
-          >
-            {t.navAnalytics}
-          </button>
-          {currentUser && (
             <button
               type="button"
-              onClick={() => setActiveTab('admin')}
-              className={`hover:text-white transition-colors whitespace-nowrap shrink-0 pb-1 flex items-center gap-1 cursor-pointer ${
-                activeTab === 'admin' ? 'text-amber-300 border-b-2 border-amber-400 font-semibold' : 'text-amber-300/90'
+              onClick={() => handleNavigateTab('landing')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
+                activeTab === 'landing'
+                  ? 'bg-sky-500/20 text-white border border-sky-400 shadow-sm'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-900 border border-transparent'
               }`}
             >
-              <Users className="w-3.5 h-3.5" />
-              Admin Usuarios & Roles
+              <Compass className="w-3.5 h-3.5 text-sky-400" />
+              <span>{currentUser ? 'Hub Start.gg (Mis Torneos)' : 'Inicio & Torneos'}</span>
             </button>
-          )}
-        </nav>
 
-        {/* Zona 3: Botones Explícitos de Login, Registro, Admin Usuario, Crear Torneo y Cerrar Sesión */}
-        <div className="flex flex-wrap items-center gap-2 shrink-0">
-          {!currentUser ? (
-            <>
-              <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900 text-[11px] font-mono text-slate-400">
-                <Eye className="w-3.5 h-3.5 text-sky-400" />
-                Modo Espectador
-              </span>
+            <button
+              type="button"
+              onClick={() => handleNavigateTab('brackets')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
+                activeTab === 'brackets'
+                  ? 'bg-sky-500/20 text-white border border-sky-400 shadow-sm'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-900 border border-transparent'
+              }`}
+            >
+              <Swords className="w-3.5 h-3.5 text-sky-400" />
+              <span>{t.navBrackets}</span>
+            </button>
 
-              <button
-                type="button"
-                onClick={() => handleOpenAuthModal('login')}
-                className="px-3.5 py-2 rounded-lg bg-sky-400 hover:bg-sky-300 text-slate-950 text-xs font-bold flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
-              >
-                <LogIn className="w-3.5 h-3.5" />
-                Iniciar Sesión
-              </button>
+            <button
+              type="button"
+              onClick={() => handleNavigateTab('participants')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
+                activeTab === 'participants'
+                  ? 'bg-sky-500/20 text-white border border-sky-400 shadow-sm'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-900 border border-transparent'
+              }`}
+            >
+              <Users className="w-3.5 h-3.5 text-sky-400" />
+              <span>{t.navParticipants}</span>
+            </button>
 
-              <button
-                type="button"
-                onClick={() => handleOpenAuthModal('register')}
-                className="px-3.5 py-2 rounded-lg border border-sky-400/50 bg-sky-500/10 hover:bg-sky-500/20 text-sky-200 text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
-              >
-                <UserPlus className="w-3.5 h-3.5" />
-                Registrarse
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={() => setActiveTab('admin')}
-                className="px-3 py-2 rounded-lg border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-200 text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
-                title="Administración de Usuario: colocar o actualizar mis datos, IDs por consola (PS5/PC) y personaje MAIN"
-              >
-                <UserCheck className="w-3.5 h-3.5 text-amber-400" />
-                <span>Administración de Usuario</span>
-                {!currentUser.profileCompleted && (
-                  <span className="px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-300 font-mono text-[9px]">
-                    Completar Datos
-                  </span>
-                )}
-              </button>
+            <button
+              type="button"
+              onClick={() => handleNavigateTab('reporter')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
+                activeTab === 'reporter'
+                  ? 'bg-sky-500/20 text-white border border-sky-400 shadow-sm'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-900 border border-transparent'
+              }`}
+            >
+              <Play className="w-3.5 h-3.5 text-emerald-400" />
+              <span>{t.navReporter}</span>
+            </button>
 
-              <button
-                type="button"
-                onClick={() => setShowCreateModal(true)}
-                style={{ backgroundColor: accentColor }}
-                className="px-3.5 py-2 text-xs font-semibold text-slate-950 rounded-lg hover:opacity-90 transition-opacity whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                {t.createTournament}
-              </button>
+            <button
+              type="button"
+              onClick={() => handleNavigateTab('circuits')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
+                activeTab === 'circuits'
+                  ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-400 shadow-sm'
+                  : 'text-emerald-300/90 hover:text-emerald-200 hover:bg-slate-900 border border-transparent'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Circuitos 6M & Masivos 3000+</span>
+            </button>
 
-              <button
-                type="button"
-                onClick={() => handleOpenAuthModal('profile')}
-                className="px-3 py-2 rounded-lg border border-sky-500/40 bg-slate-900 hover:bg-slate-800 text-xs text-sky-200 flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
-                title="Ver o editar mi perfil competitivo"
-              >
-                <Shield className="w-3.5 h-3.5 text-sky-400" />
-                <span className="font-semibold">{currentUser.gamerTag}</span>
-              </button>
+            <button
+              type="button"
+              onClick={() => handleNavigateTab('analytics')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
+                activeTab === 'analytics'
+                  ? 'bg-sky-500/20 text-white border border-sky-400 shadow-sm'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-900 border border-transparent'
+              }`}
+            >
+              <Sliders className="w-3.5 h-3.5 text-sky-400" />
+              <span>{t.navAnalytics}</span>
+            </button>
 
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="px-3 py-2 rounded-lg border border-rose-500/40 bg-rose-950/40 hover:bg-rose-900/60 text-rose-200 text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
-                title="Cerrar sesión activa y volver a modo espectador"
-              >
-                <LogOut className="w-3.5 h-3.5 text-rose-400" />
-                Cerrar Sesión
-              </button>
-            </>
-          )}
+            <button
+              type="button"
+              onClick={() => handleNavigateTab('admin')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
+                activeTab === 'admin'
+                  ? 'bg-amber-500/20 text-amber-200 border border-amber-400 shadow-sm'
+                  : 'text-amber-300/90 hover:text-amber-200 hover:bg-slate-900 border border-transparent'
+              }`}
+            >
+              <Shield className="w-3.5 h-3.5 text-amber-400" />
+              <span>Admin Usuarios & Roles</span>
+            </button>
+          </nav>
         </div>
       </header>
-
-      {/* Navegación Móvil / Tablet Compacta */}
-      <div className="flex xl:hidden items-center gap-1 overflow-x-auto px-4 py-2 border-b border-slate-800 bg-slate-950">
-        {(
-          [
-            ['landing', currentUser ? 'Hub Start.gg' : 'Explorar Torneos'],
-            ['brackets', t.navBrackets],
-            ['participants', t.navParticipants],
-            ['reporter', t.navReporter],
-            ['analytics', t.navAnalytics],
-            ...(currentUser ? ([['admin', 'Admin Usuarios']] as const) : []),
-          ] as const
-        ).map(([key, label]) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => setActiveTab(key)}
-            className={`px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap shrink-0 ${
-              activeTab === key ? 'bg-slate-800 text-white' : 'text-slate-400'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
 
       {/* BARRA CONTEXTUAL DEL WORKSPACE (Selector de Torneo, Rol Efectivo en este Torneo, Formato OBF y Herramientas) */}
       <section className="border-b border-slate-800/80 bg-slate-900/60 px-6 py-3">
@@ -1305,6 +1515,34 @@ export default function App() {
           </div>
         )}
 
+        {/* En la vista de Inicio / Hub Start.gg mostramos la sala Google Meet y el Chat con el Bracket 2D/Texto arriba */}
+        {activeTab === 'landing' && (
+          <TournamentGoogleMeetPanel
+            obfDoc={obf}
+            currentUser={currentUser}
+            authToken={authToken}
+            effectiveRole={activeRole}
+            activeTab={activeTab}
+            onMeetSessionUpdated={(updatedDoc) => {
+              setObf(updatedDoc);
+              setTournamentSummaries((prev) =>
+                prev.map((item) =>
+                  (item.event?.tournamentSlug || item.slug || item.tournamentSlug) ===
+                  updatedDoc.event.tournamentSlug
+                    ? { ...item, event: updatedDoc.event }
+                    : item
+                )
+              );
+            }}
+            onOpenSelfRegister={() => handleSelfEnrollInTournament(activeTournamentSlug)}
+            onOpenAuthModal={() => handleOpenAuthModal('login')}
+            onSelectSet={(targetSetID) => {
+              setSelectedSetID(targetSetID);
+              handleNavigateTab('reporter');
+            }}
+          />
+        )}
+
         {/* VISTA 0: LANDING PAGE PÚBLICA (SIN LOGIN) Y CENTRO START.GG DE ROLES POR TORNEO (CON LOGIN) */}
         {activeTab === 'landing' && (
           <PublicLandingAndStartHub
@@ -1328,20 +1566,20 @@ export default function App() {
               if (slug && slug !== activeTournamentSlug) {
                 await handleSelectTournament(slug);
               }
-              setActiveTab('admin');
+              handleNavigateTab('admin');
             }}
             onSelfEnrollInTournament={handleSelfEnrollInTournament}
             onLogout={handleLogout}
           />
         )}
 
-        {/* Barra de Acciones Rápidas y Búsqueda Global (cuando se explora un torneo específico) */}
+        {/* Barra de Acciones Rápidas y Búsqueda Global (cuando se explora una pestaña específica) */}
         {activeTab !== 'landing' && (
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-wrap items-center gap-2 flex-1 min-w-[260px]">
               <button
                 type="button"
-                onClick={() => setActiveTab('landing')}
+                onClick={() => handleNavigateTab('landing')}
                 className="px-3 py-2 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-xs font-medium text-sky-300 flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <Compass className="w-3.5 h-3.5" />
@@ -1433,6 +1671,111 @@ export default function App() {
           </div>
         )}
 
+        {/* BANNER FLOTANTE DE MATCH CHECK-IN ACTIVO EN DASHBOARD */}
+        {activeTab !== 'landing' &&
+          obf.event.enableMatchCheckIn !== false &&
+          (() => {
+            const activeWaitingSet =
+              (myEntrantInActiveTournament &&
+                obf.sets.find(
+                  (s) =>
+                    (s.entrant1ID === myEntrantInActiveTournament.entrantID ||
+                      s.entrant2ID === myEntrantInActiveTournament.entrantID) &&
+                    (s.status === 'WAITING_CHECKIN' ||
+                      s.status === 'PARTIAL_CHECKIN' ||
+                      s.status === 'READY') &&
+                    !isSetCompletedOrDq(s.status)
+                )) ||
+              (selectedSet &&
+              selectedSet.entrant1ID &&
+              selectedSet.entrant2ID &&
+              (selectedSet.status === 'WAITING_CHECKIN' ||
+                selectedSet.status === 'PARTIAL_CHECKIN' ||
+                selectedSet.status === 'READY')
+                ? selectedSet
+                : undefined);
+
+            if (!activeWaitingSet) return null;
+            const p1 = obf.entrants.find((e) => e.entrantID === activeWaitingSet.entrant1ID);
+            const p2 = obf.entrants.find((e) => e.entrantID === activeWaitingSet.entrant2ID);
+            const mySlot: 1 | 2 | null =
+              myEntrantInActiveTournament &&
+              activeWaitingSet.entrant1ID === myEntrantInActiveTournament.entrantID
+                ? 1
+                : myEntrantInActiveTournament &&
+                  activeWaitingSet.entrant2ID === myEntrantInActiveTournament.entrantID
+                ? 2
+                : null;
+
+            const deadlineMs = activeWaitingSet.checkInDeadlineAt
+              ? new Date(activeWaitingSet.checkInDeadlineAt).getTime()
+              : dashboardCountdownTick +
+                (obf.event.matchCheckInTimeoutMinutes ?? 5) * 60 * 1000;
+            const remainingSec = Math.max(
+              0,
+              Math.floor((deadlineMs - dashboardCountdownTick) / 1000)
+            );
+            const mins = String(Math.floor(remainingSec / 60)).padStart(2, '0');
+            const secs = String(remainingSec % 60).padStart(2, '0');
+
+            return (
+              <div className="mb-5 rounded-xl border border-amber-500/60 bg-amber-950/25 px-4 py-3 flex flex-wrap items-center justify-between gap-3 shadow-lg">
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex h-2.5 w-2.5 rounded-full bg-amber-400 animate-ping" />
+                  <div>
+                    <div className="text-xs font-bold uppercase tracking-wider text-amber-300">
+                      ¡Tu partida está lista en {activeWaitingSet.other?.station || 'Estación Central'}! ·{' '}
+                      {activeWaitingSet.setID} ({activeWaitingSet.roundLabel})
+                    </div>
+                    <div className="text-xs text-slate-300 mt-0.5">
+                      <span className="font-semibold text-white">
+                        {p1?.entrantTag || 'Jugador 1'}
+                      </span>{' '}
+                      {activeWaitingSet.player1CheckedIn ? (
+                        <span className="text-emerald-400 font-mono text-[11px]">[LISTO]</span>
+                      ) : (
+                        <span className="text-amber-300 font-mono text-[11px]">[PENDIENTE]</span>
+                      )}{' '}
+                      vs{' '}
+                      <span className="font-semibold text-white">
+                        {p2?.entrantTag || 'Jugador 2'}
+                      </span>{' '}
+                      {activeWaitingSet.player2CheckedIn ? (
+                        <span className="text-emerald-400 font-mono text-[11px]">[LISTO]</span>
+                      ) : (
+                        <span className="text-amber-300 font-mono text-[11px]">[PENDIENTE]</span>
+                      )}{' '}
+                      · Regla Double DQ:{' '}
+                      <span className="font-mono text-amber-200">
+                        {obf.event.doubleDqRule || 'AUTO_BYE_NEXT_ROUND'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedSetID(activeWaitingSet.setID);
+                      handleMatchCheckIn(
+                        activeWaitingSet.setID,
+                        mySlot !== null
+                          ? mySlot
+                          : !activeWaitingSet.player1CheckedIn
+                          ? 1
+                          : 2
+                      );
+                    }}
+                    className="px-4 py-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-mono font-bold text-xs tracking-wide shadow cursor-pointer"
+                  >
+                    [ HACER CHECK-IN ({mins}:{secs}) ]
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
+
         {/* VISTA 1: BRACKETS EN VIVO (DAG O(1) + PANEL LATERAL CONTEXTUAL SEGÚN ROL) */}
         {activeTab === 'brackets' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -1458,6 +1801,8 @@ export default function App() {
                 casterNarrative={casterNarrative}
                 onRequestCasterNarrative={handleRequestCasterNarrative}
                 loadingNarrative={loadingNarrative}
+                activeMassivePoolCode={activeMassivePoolCode}
+                onChangeMassivePoolCode={setActiveMassivePoolCode}
               />
             </div>
 
@@ -1478,6 +1823,8 @@ export default function App() {
                   onConfirmScore={handleReportScore}
                   onCascadeReset={handleCascadeReset}
                   onVerifyVisionAi={handleVerifyVisionAi}
+                  onMatchCheckIn={handleMatchCheckIn}
+                  onAdminCheckInAction={handleAdminCheckInAction}
                 />
               )}
 
@@ -1561,6 +1908,8 @@ export default function App() {
                 onConfirmScore={handleReportScore}
                 onCascadeReset={handleCascadeReset}
                 onVerifyVisionAi={handleVerifyVisionAi}
+                onMatchCheckIn={handleMatchCheckIn}
+                onAdminCheckInAction={handleAdminCheckInAction}
               />
             </div>
 
@@ -1622,6 +1971,26 @@ export default function App() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* VISTA 3.5: LIGAS / CIRCUITOS DE 6 MESES & TORNEOS MASIVOS (3,000+ PARTICIPANTES) */}
+        {activeTab === 'circuits' && (
+          <CircuitsAndMassiveScaleView
+            obf={obf}
+            standings={standings}
+            onSelectPoolFor3DCanvas={(poolCode) => {
+              setActiveMassivePoolCode(poolCode);
+              setActiveTab('brackets');
+            }}
+            onGenerateSeasonFinalsTournament={(circuitName, topCut) => {
+              setNewTourneyName(`${circuitName} — Season Finals (Top ${topCut})`);
+              setNewTourneyFormat('double_elimination');
+              setNewTourneyEntrants(topCut);
+              setNewTourneyPrize(50000);
+              setCreateWizardStep(1);
+              setShowCreateModal(true);
+            }}
+          />
         )}
 
         {/* VISTA 4: ANALÍTICA EN TIEMPO REAL, BENCHMARK DAG O(1) Y REDIS CACHE */}
@@ -1853,6 +2222,8 @@ export default function App() {
               thirdPartyApiKeys={thirdPartyApiKeys}
               cloudBackups={cloudBackups}
               activeTournamentSlug={activeTournamentSlug}
+              activeTournamentEvent={obf.event}
+              onSaveTournamentCheckInConfig={handleSaveTournamentCheckInConfig}
               onSaveAdminConfig={async (cfg) => {
                 const res = await fetch('/api/admin/config', {
                   method: 'POST',
@@ -1925,6 +2296,34 @@ export default function App() {
               }}
             />
           </div>
+        )}
+
+        {/* En las pestañas internas (Brackets, Participantes, Árbitro, Circuitos, Analítica, Admin) mantenemos accesible el Lobby Google Meet y Chat del torneo debajo de la vista activa */}
+        {activeTab !== 'landing' && (
+          <TournamentGoogleMeetPanel
+            obfDoc={obf}
+            currentUser={currentUser}
+            authToken={authToken}
+            effectiveRole={activeRole}
+            activeTab={activeTab}
+            onMeetSessionUpdated={(updatedDoc) => {
+              setObf(updatedDoc);
+              setTournamentSummaries((prev) =>
+                prev.map((item) =>
+                  (item.event?.tournamentSlug || item.slug || item.tournamentSlug) ===
+                  updatedDoc.event.tournamentSlug
+                    ? { ...item, event: updatedDoc.event }
+                    : item
+                )
+              );
+            }}
+            onOpenSelfRegister={() => handleSelfEnrollInTournament(activeTournamentSlug)}
+            onOpenAuthModal={() => handleOpenAuthModal('login')}
+            onSelectSet={(targetSetID) => {
+              setSelectedSetID(targetSetID);
+              handleNavigateTab('reporter');
+            }}
+          />
         )}
       </main>
 
@@ -2126,121 +2525,277 @@ export default function App() {
         </div>
       )}
 
-      {/* MODAL PARA CREAR UN NUEVO TORNEO OBF v1.0 */}
+      {/* MODAL WIZARD DE 2 PASOS PARA CREAR UN NUEVO TORNEO OBF v1.0 */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
           <form
             onSubmit={handleCreateTournament}
-            className="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-950 p-6 space-y-4"
+            className="w-full max-w-xl rounded-2xl border border-slate-800 bg-slate-950 p-6 space-y-4"
           >
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div>
                 <h3 className="text-base font-semibold text-white">
-                  Crear Nuevo Torneo en Motor DAG O(1)
+                  Wizard de Creación de Torneo · Paso {createWizardStep} de 2
                 </h3>
                 <p className="text-xs text-sky-400">
-                  Al crearlo, serás asignado automáticamente como Admin (TOURNAMENT_DIRECTOR) de este torneo.
+                  {createWizardStep === 1
+                    ? 'Paso 1: Estructura General, Juego y Formato OBF v1.0'
+                    : 'Paso 2: Reglas Graduables de Check-In por Pelea/Set y DQ Automático'}
                 </p>
               </div>
               <button
                 type="button"
-                onClick={() => setShowCreateModal(false)}
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setCreateWizardStep(1);
+                }}
                 className="p-1 text-slate-400 hover:text-white"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="space-y-3 text-xs">
-              <div>
-                <label className="block text-slate-300 mb-1">Nombre Oficial del Torneo</label>
-                <input
-                  type="text"
-                  required
-                  value={newTourneyName}
-                  onChange={(e) => setNewTourneyName(e.target.value)}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-300 mb-1">Título eSports Oficial</label>
-                  <select
-                    value={newTourneyGameSlug}
-                    onChange={(e) => setNewTourneyGameSlug(e.target.value)}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white"
-                  >
-                    {ESPORTS_GAMES_CATALOG.map((g) => (
-                      <option key={g.slug} value={g.slug}>
-                        {g.name} ({g.genre})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-slate-300 mb-1">Formato OBF v1.0</label>
-                  <select
-                    value={newTourneyFormat}
-                    onChange={(e) => setNewTourneyFormat(e.target.value as TournamentFormat)}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white"
-                  >
-                    <option value="two_stage">Two-Stage (Suizo + Doble Elim)</option>
-                    <option value="double_elimination">Doble Eliminación</option>
-                    <option value="single_elimination">Eliminación Simple (2^k)</option>
-                    <option value="swiss">Sistema Suizo</option>
-                    <option value="round_robin">Round Robin (Berger)</option>
-                    <option value="free_for_all">Free-For-All</option>
-                    <option value="leaderboard">Leaderboard / Time Trial</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-slate-300 mb-1">Cantidad de Participantes</label>
-                  <select
-                    value={newTourneyEntrants}
-                    onChange={(e) => setNewTourneyEntrants(Number(e.target.value))}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 font-mono tabular-nums text-white"
-                  >
-                    <option value={4}>4 Competidores</option>
-                    <option value={8}>8 Competidores</option>
-                    <option value={12}>12 Competidores (Con BYEs automáticos)</option>
-                    <option value={16}>16 Competidores</option>
-                    <option value={24}>24 Competidores (Two-Stage 3D Z-Space)</option>
-                    <option value={32}>32 Competidores</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-slate-300 mb-1">Prize Pool (USD)</label>
-                  <input
-                    type="number"
-                    min={0}
-                    step={500}
-                    value={newTourneyPrize}
-                    onChange={(e) => setNewTourneyPrize(Number(e.target.value))}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 font-mono tabular-nums text-white"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
+            {/* Indicador de Pasos del Wizard */}
+            <div className="grid grid-cols-2 gap-2 text-xs">
               <button
                 type="button"
-                onClick={() => setShowCreateModal(false)}
+                onClick={() => setCreateWizardStep(1)}
+                className={`py-2 px-3 rounded-lg border font-medium text-left ${
+                  createWizardStep === 1
+                    ? 'border-sky-500/60 bg-sky-500/10 text-sky-300'
+                    : 'border-slate-800 bg-slate-900 text-slate-400'
+                }`}
+              >
+                1. Datos & Formato del Torneo
+              </button>
+              <button
+                type="button"
+                onClick={() => setCreateWizardStep(2)}
+                className={`py-2 px-3 rounded-lg border font-medium text-left ${
+                  createWizardStep === 2
+                    ? 'border-amber-500/60 bg-amber-500/10 text-amber-300'
+                    : 'border-slate-800 bg-slate-900 text-slate-400'
+                }`}
+              >
+                2. Check-In por Pelea & Reglas DQ
+              </button>
+            </div>
+
+            {createWizardStep === 1 ? (
+              <div className="space-y-3 text-xs">
+                <div>
+                  <label className="block text-slate-300 mb-1">Nombre Oficial del Torneo</label>
+                  <input
+                    type="text"
+                    required
+                    value={newTourneyName}
+                    onChange={(e) => setNewTourneyName(e.target.value)}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-300 mb-1">Título eSports Oficial</label>
+                    <select
+                      value={newTourneyGameSlug}
+                      onChange={(e) => setNewTourneyGameSlug(e.target.value)}
+                      className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white"
+                    >
+                      {ESPORTS_GAMES_CATALOG.map((g) => (
+                        <option key={g.slug} value={g.slug}>
+                          {g.name} ({g.genre})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-300 mb-1">Formato OBF v1.0</label>
+                    <select
+                      value={newTourneyFormat}
+                      onChange={(e) => setNewTourneyFormat(e.target.value as TournamentFormat)}
+                      className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white"
+                    >
+                      <option value="two_stage">Two-Stage (Suizo + Doble Elim)</option>
+                      <option value="double_elimination">Doble Eliminación</option>
+                      <option value="single_elimination">Eliminación Simple (2^k)</option>
+                      <option value="swiss">Sistema Suizo</option>
+                      <option value="round_robin">Round Robin (Berger)</option>
+                      <option value="free_for_all">Free-For-All</option>
+                      <option value="leaderboard">Leaderboard / Time Trial</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-300 mb-1">Cantidad de Participantes</label>
+                    <select
+                      value={newTourneyEntrants}
+                      onChange={(e) => setNewTourneyEntrants(Number(e.target.value))}
+                      className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 font-mono tabular-nums text-white"
+                    >
+                      <option value={4}>4 Competidores</option>
+                      <option value={8}>8 Competidores</option>
+                      <option value={12}>12 Competidores (Con BYEs automáticos)</option>
+                      <option value={16}>16 Competidores</option>
+                      <option value={24}>24 Competidores (Two-Stage 3D Z-Space)</option>
+                      <option value={32}>32 Competidores</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-300 mb-1">Prize Pool (USD)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      step={500}
+                      value={newTourneyPrize}
+                      onChange={(e) => setNewTourneyPrize(Number(e.target.value))}
+                      className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 font-mono tabular-nums text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3.5 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <label className="flex items-center justify-between p-3 rounded-lg border border-slate-800 bg-slate-900 cursor-pointer">
+                    <div>
+                      <div className="font-semibold text-white">Habilitar Check-In por Pelea</div>
+                      <div className="text-[11px] text-slate-400">enableMatchCheckIn</div>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={newTourneyEnableMatchCheckIn}
+                      onChange={(e) => setNewTourneyEnableMatchCheckIn(e.target.checked)}
+                      className="h-4 w-4 accent-amber-400"
+                    />
+                  </label>
+
+                  <label className="flex items-center justify-between p-3 rounded-lg border border-slate-800 bg-slate-900 cursor-pointer">
+                    <div>
+                      <div className="font-semibold text-white">Auto-DQ por Timeout (BullMQ)</div>
+                      <div className="text-[11px] text-slate-400">enableAutoDq</div>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={newTourneyEnableAutoDq}
+                      onChange={(e) => setNewTourneyEnableAutoDq(e.target.checked)}
+                      className="h-4 w-4 accent-amber-400"
+                    />
+                  </label>
+                </div>
+
+                <div className="p-3 rounded-lg border border-slate-800 bg-slate-900">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="font-semibold text-white">
+                      Tiempo Límite de Check-In (matchCheckInTimeoutMinutes)
+                    </span>
+                    <span className="font-mono font-bold text-amber-400">
+                      {newTourneyCheckInTimeoutMinutes} min
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={2}
+                    max={30}
+                    step={1}
+                    value={newTourneyCheckInTimeoutMinutes}
+                    onChange={(e) => setNewTourneyCheckInTimeoutMinutes(Number(e.target.value))}
+                    className="w-full accent-amber-400 cursor-pointer"
+                  />
+                  <div className="flex justify-between text-[10px] font-mono text-slate-500 mt-1">
+                    <span>2 min</span>
+                    <span>5 min (Default)</span>
+                    <span>15 min</span>
+                    <span>30 min</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 mb-1">
+                    Acción ante Descalificación Doble (doubleDqRule)
+                  </label>
+                  <select
+                    value={newTourneyDoubleDqRule}
+                    onChange={(e) => setNewTourneyDoubleDqRule(e.target.value as DoubleDqRule)}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white"
+                  >
+                    <option value="AUTO_BYE_NEXT_ROUND">
+                      AUTO_BYE_NEXT_ROUND (Recomendado: pase directo BYE al rival de siguiente ronda)
+                    </option>
+                    <option value="RANDOM_COIN_FLIP">
+                      RANDOM_COIN_FLIP (Avanza a uno al azar por Coin Flip 2-0)
+                    </option>
+                    <option value="PAUSE_FOR_ADMIN">
+                      PAUSE_FOR_ADMIN (Pausa el nodo y alerta al panel del Árbitro/Admin)
+                    </option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 mb-1">
+                    Penalización en Doble Eliminación (losersBracketDqPenalty)
+                  </label>
+                  <select
+                    value={newTourneyLosersPenalty}
+                    onChange={(e) =>
+                      setNewTourneyLosersPenalty(e.target.value as LosersBracketDqPenalty)
+                    }
+                    className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white"
+                  >
+                    <option value="DROP_TO_LOSERS">
+                      DROP_TO_LOSERS (En Winners cae a Losers; en Losers queda eliminado)
+                    </option>
+                    <option value="ELIMINATE_FROM_EVENT">
+                      ELIMINATE_FROM_EVENT (Eliminación total inmediata del torneo por inasistencia)
+                    </option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-between items-center gap-2 pt-3 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setCreateWizardStep(1);
+                }}
                 className="px-4 py-2 rounded-lg border border-slate-700 text-xs text-slate-300"
               >
                 Cancelar
               </button>
-              <button
-                type="submit"
-                style={{ backgroundColor: accentColor }}
-                className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-950"
-              >
-                Generar Torneo y Sincronizar WS
-              </button>
+
+              <div className="flex items-center gap-2">
+                {createWizardStep === 2 && (
+                  <button
+                    type="button"
+                    onClick={() => setCreateWizardStep(1)}
+                    className="px-3.5 py-2 rounded-lg border border-slate-700 text-xs text-slate-200"
+                  >
+                    ← Paso 1
+                  </button>
+                )}
+
+                {createWizardStep === 1 ? (
+                  <button
+                    type="button"
+                    onClick={() => setCreateWizardStep(2)}
+                    className="px-4 py-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-xs font-semibold text-slate-950"
+                  >
+                    Siguiente: Reglas Check-In & DQ →
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    style={{ backgroundColor: accentColor }}
+                    className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-950"
+                  >
+                    Generar Torneo y Sincronizar WS
+                  </button>
+                )}
+              </div>
             </div>
           </form>
         </div>

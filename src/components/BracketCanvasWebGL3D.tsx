@@ -44,28 +44,100 @@ const PHASE_PALETTE: Record<
 };
 
 /**
- * Dibuja la textura frontal de alta resolución (1024x512) de cada Estación 3D
- * replicando fielmente el diseño Cyber-Esports del repositorio base.
+ * Determina el esquema de color semántico 3D de la Estación según la Máquina de Estados de Check-In y DQ:
+ * - Amarillo (#F59E0B): Esperando el Check-In de los jugadores (WAITING_CHECKIN / PARTIAL_CHECKIN / READY con rivales)
+ * - Azul Cian (#00F0FF): Ambos hicieron Check-In y la pelea está en curso (IN_PROGRESS)
+ * - Rojo Carmesí (#DC2626): Jugador(es) descalificado(s) por inactividad (SINGLE_DQ / DOUBLE_DQ)
+ */
+function resolveStation3DStatePalette(set: OBFSet, enableMatchCheckIn = true): {
+  hex: string;
+  num: number;
+  headerText: string;
+  badgeText?: string;
+  badgeBg?: string;
+} {
+  if (
+    set.status === 'SINGLE_DQ' ||
+    set.status === 'DOUBLE_DQ' ||
+    set.isDq ||
+    set.entrant1Forfeit ||
+    set.entrant2Forfeit
+  ) {
+    return {
+      hex: '#DC2626',
+      num: 0xdc2626,
+      headerText: '#FFFFFF',
+      badgeText: set.status === 'DOUBLE_DQ' ? 'DOUBLE DQ' : 'DQ WALKOVER',
+      badgeBg: '#991B1B',
+    };
+  }
+
+  if (set.status === 'IN_PROGRESS') {
+    return {
+      hex: '#00F0FF',
+      num: 0x00f0ff,
+      headerText: '#041019',
+      badgeText: 'CHECK-IN OK • EN VIVO',
+      badgeBg: '#0284C7',
+    };
+  }
+
+  const isWaitingForMatchCheckIn =
+    enableMatchCheckIn !== false &&
+    Boolean(set.entrant1ID && set.entrant2ID) &&
+    (set.status === 'WAITING_CHECKIN' ||
+      set.status === 'PARTIAL_CHECKIN' ||
+      (set.status === 'READY' && !(set.player1CheckedIn && set.player2CheckedIn)));
+
+  if (isWaitingForMatchCheckIn) {
+    return {
+      hex: '#F59E0B',
+      num: 0xf59e0b,
+      headerText: '#190E02',
+      badgeText:
+        set.status === 'PARTIAL_CHECKIN' || set.player1CheckedIn || set.player2CheckedIn
+          ? 'CHECK-IN 1/2'
+          : 'ESPERANDO CHECK-IN',
+      badgeBg: '#B45309',
+    };
+  }
+
+  const base = PHASE_PALETTE[set.phase] || PHASE_PALETTE.WINNERS;
+  return {
+    hex: base.hex,
+    num: base.num,
+    headerText: base.headerText,
+  };
+}
+
+/**
+ * Dibuja la textura frontal de alta resolución (1024x512) de cada Estación 3D (<StationCard3D />)
+ * integrando los estados visuales de Match Check-In (Amarillo), Pelea en Curso (Azul Cian) y DQ (Rojo con etiqueta DQ).
  */
 function createStationCardCanvasTexture(
   set: OBFSet,
   p1: OBFEntrant | undefined,
   p2: OBFEntrant | undefined,
   isSelected: boolean,
-  maxAnisotropy: number
+  maxAnisotropy: number,
+  enableMatchCheckIn = true
 ): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
   canvas.width = 1024;
   canvas.height = 512;
   const ctx = canvas.getContext('2d')!;
 
-  const theme = PHASE_PALETTE[set.phase] || PHASE_PALETTE.WINNERS;
+  const theme = resolveStation3DStatePalette(set, enableMatchCheckIn);
+  const isDqSet =
+    set.status === 'SINGLE_DQ' ||
+    set.status === 'DOUBLE_DQ' ||
+    Boolean(set.isDq);
 
-  // Fondo principal oscuro Cyber-Slate
-  ctx.fillStyle = isSelected ? '#132038' : '#0B1320';
+  // Fondo principal oscuro Cyber-Slate (con tinte rojizo si hubo DQ)
+  ctx.fillStyle = isDqSet ? '#1F0910' : isSelected ? '#132038' : '#0B1320';
   ctx.fillRect(0, 0, 1024, 512);
 
-  // Franja superior de color de fase (Header)
+  // Franja superior de color de estado/fase (Header)
   ctx.fillStyle = theme.hex;
   ctx.fillRect(0, 0, 1024, 104);
 
@@ -76,40 +148,63 @@ function createStationCardCanvasTexture(
 
   // Texto del Header (ID del Set + Nombre de Ronda)
   ctx.fillStyle = theme.headerText;
-  ctx.font = 'bold 33px "Plus Jakarta Sans", "Outfit", sans-serif';
-  const maxChars = set.other.isStream ? 25 : 36;
+  ctx.font = 'bold 32px "Plus Jakarta Sans", "Outfit", sans-serif';
+  const hasTopBadge = Boolean(theme.badgeText || set.other.isStream);
+  const maxChars = hasTopBadge ? 24 : 36;
   const titleText = `${set.setID} • ${set.roundLabel}`;
   ctx.fillText(titleText.slice(0, maxChars), 32, 66);
 
-  // Etiqueta LIVE STREAM morada si la estación es de transmisión
-  if (set.other.isStream) {
-    const badgeW = 244;
+  // Etiqueta superior derecha: Prioriza DQ / Check-In / Live Stream
+  if (theme.badgeText || set.other.isStream) {
+    const labelToDraw = theme.badgeText || 'LIVE STREAM';
+    const badgeW = Math.max(248, labelToDraw.length * 16 + 38);
     const badgeH = 58;
     const badgeX = 1024 - badgeW - 24;
     const badgeY = 23;
 
-    ctx.fillStyle = '#8A2BE2';
+    ctx.fillStyle = theme.badgeBg || '#8A2BE2';
     ctx.beginPath();
     ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 10);
     ctx.fill();
 
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 26px "JetBrains Mono", monospace';
-    ctx.fillText('LIVE STREAM', badgeX + 24, badgeY + 38);
+    ctx.font = 'bold 24px "JetBrains Mono", monospace';
+    ctx.fillText(labelToDraw, badgeX + 20, badgeY + 38);
   }
 
-  // Fila Jugador 1
-  const p1Label = p1 ? `#${p1.initialSeed} ${p1.entrantTag}` : 'TBD (Esperando)';
-  const p1Won = set.status === 'COMPLETED' && set.winnerID === set.entrant1ID;
-  ctx.fillStyle = p1 ? (p1Won ? '#FFFFFF' : '#E2E8F0') : '#64748B';
-  ctx.font = `${p1Won ? 'bold' : '600'} 42px "Plus Jakarta Sans", sans-serif`;
-  ctx.fillText(p1Label.slice(0, 24), 38, 205);
+  const p1Dq = Boolean(
+    set.entrant1Forfeit ||
+      set.status === 'DOUBLE_DQ' ||
+      (set.isDq && set.dqReason === 'PLAYER1_TIMEOUT')
+  );
+  const p2Dq = Boolean(
+    set.entrant2Forfeit ||
+      set.status === 'DOUBLE_DQ' ||
+      (set.isDq && set.dqReason === 'PLAYER2_TIMEOUT')
+  );
 
-  // Marcador Jugador 1
-  ctx.fillStyle = p1Won ? '#00F0FF' : theme.hex;
-  ctx.font = 'bold 54px "JetBrains Mono", monospace';
+  // Fila Jugador 1
+  const p1CheckSuffix =
+    p1 && p2 && (set.status === 'WAITING_CHECKIN' || set.status === 'PARTIAL_CHECKIN' || set.status === 'READY')
+      ? set.player1CheckedIn
+        ? ' [OK]'
+        : ' [WAIT]'
+      : p1Dq
+      ? ' [DQ]'
+      : '';
+  const p1Label = p1 ? `#${p1.initialSeed} ${p1.entrantTag}${p1CheckSuffix}` : 'TBD (Esperando)';
+  const p1Won =
+    (set.status === 'COMPLETED' || set.status === 'SINGLE_DQ') &&
+    set.winnerID === set.entrant1ID;
+  ctx.fillStyle = p1Dq ? '#F87171' : p1 ? (p1Won ? '#FFFFFF' : '#E2E8F0') : '#64748B';
+  ctx.font = `${p1Won ? 'bold' : '600'} 40px "Plus Jakarta Sans", sans-serif`;
+  ctx.fillText(p1Label.slice(0, 26), 38, 205);
+
+  // Marcador Jugador 1 (o etiqueta DQ)
+  ctx.fillStyle = p1Dq ? '#EF4444' : p1Won ? '#00F0FF' : theme.hex;
+  ctx.font = 'bold 52px "JetBrains Mono", monospace';
   ctx.textAlign = 'right';
-  ctx.fillText(String(set.entrant1Score), 975, 210);
+  ctx.fillText(p1Dq ? 'DQ' : String(set.entrant1Score), 975, 210);
   ctx.textAlign = 'left';
 
   // Línea divisoria central
@@ -121,27 +216,41 @@ function createStationCardCanvasTexture(
   ctx.stroke();
 
   // Fila Jugador 2
-  const p2Label = p2 ? `#${p2.initialSeed} ${p2.entrantTag}` : 'TBD (Esperando)';
-  const p2Won = set.status === 'COMPLETED' && set.winnerID === set.entrant2ID;
-  ctx.fillStyle = p2 ? (p2Won ? '#FFFFFF' : '#CBD5E1') : '#64748B';
-  ctx.font = `${p2Won ? 'bold' : '600'} 42px "Plus Jakarta Sans", sans-serif`;
-  ctx.fillText(p2Label.slice(0, 24), 38, 342);
+  const p2CheckSuffix =
+    p1 && p2 && (set.status === 'WAITING_CHECKIN' || set.status === 'PARTIAL_CHECKIN' || set.status === 'READY')
+      ? set.player2CheckedIn
+        ? ' [OK]'
+        : ' [WAIT]'
+      : p2Dq
+      ? ' [DQ]'
+      : '';
+  const p2Label = p2 ? `#${p2.initialSeed} ${p2.entrantTag}${p2CheckSuffix}` : 'TBD (Esperando)';
+  const p2Won =
+    (set.status === 'COMPLETED' || set.status === 'SINGLE_DQ') &&
+    set.winnerID === set.entrant2ID;
+  ctx.fillStyle = p2Dq ? '#F87171' : p2 ? (p2Won ? '#FFFFFF' : '#CBD5E1') : '#64748B';
+  ctx.font = `${p2Won ? 'bold' : '600'} 40px "Plus Jakarta Sans", sans-serif`;
+  ctx.fillText(p2Label.slice(0, 26), 38, 342);
 
-  // Marcador Jugador 2
-  ctx.fillStyle = p2Won ? '#00F0FF' : '#E2E8F0';
-  ctx.font = 'bold 54px "JetBrains Mono", monospace';
+  // Marcador Jugador 2 (o etiqueta DQ)
+  ctx.fillStyle = p2Dq ? '#EF4444' : p2Won ? '#00F0FF' : '#E2E8F0';
+  ctx.font = 'bold 52px "JetBrains Mono", monospace';
   ctx.textAlign = 'right';
-  ctx.fillText(String(set.entrant2Score), 975, 346);
+  ctx.fillText(p2Dq ? 'DQ' : String(set.entrant2Score), 975, 346);
   ctx.textAlign = 'left';
 
   // Franja inferior de Metadatos de Estación y Estado
   ctx.fillStyle = '#060A12';
   ctx.fillRect(8, 412, 1008, 92);
 
-  ctx.fillStyle = '#94A3B8';
-  ctx.font = '600 26px "JetBrains Mono", monospace';
-  const stationStr = `Estación: ${set.other.station || 'EST-01'} • Estado: ${set.status}`;
-  ctx.fillText(stationStr, 38, 468);
+  ctx.fillStyle = isDqSet ? '#FCA5A5' : '#94A3B8';
+  ctx.font = '600 25px "JetBrains Mono", monospace';
+  const checkInStatusStr =
+    p1 && p2 && (set.status === 'WAITING_CHECKIN' || set.status === 'PARTIAL_CHECKIN' || set.status === 'READY')
+      ? ` • Check-In: ${set.player1CheckedIn ? 'P1✓' : 'P1…'}/${set.player2CheckedIn ? 'P2✓' : 'P2…'}`
+      : '';
+  const stationStr = `Estación: ${set.other.station || 'EST-01'} • Estado: ${set.status}${checkInStatusStr}`;
+  ctx.fillText(stationStr.slice(0, 56), 38, 468);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
@@ -500,7 +609,10 @@ export const BracketCanvasWebGL3D: React.FC<BracketCanvasWebGL3DProps> = ({
         const p1 = set.entrant1ID ? entrantMap.get(set.entrant1ID) : undefined;
         const p2 = set.entrant2ID ? entrantMap.get(set.entrant2ID) : undefined;
         const isSelected = set.setID === selId;
-        const theme = PHASE_PALETTE[set.phase] || PHASE_PALETTE.WINNERS;
+        const theme = resolveStation3DStatePalette(
+          set,
+          doc.event.enableMatchCheckIn !== false
+        );
 
         const stationGroup = new THREE.Group();
         stationGroup.position.copy(vec);
@@ -522,7 +634,8 @@ export const BracketCanvasWebGL3D: React.FC<BracketCanvasWebGL3DProps> = ({
           p1,
           p2,
           isSelected,
-          maxAnisotropy
+          maxAnisotropy,
+          doc.event.enableMatchCheckIn !== false
         );
         const frontMat = new THREE.MeshBasicMaterial({
           map: frontTexture,

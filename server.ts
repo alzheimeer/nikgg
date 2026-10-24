@@ -22,10 +22,17 @@ import {
   RBAC_PERMISSIONS_MATRIX,
   type SetGameSelection,
   type TokenScope,
+  type TournamentChatMessage,
+  type ChatBracketDisplayMode,
   type TournamentFormat,
+  type TournamentGoogleMeetSession,
+  type DoubleDqRule,
+  type LosersBracketDqPenalty,
   type UserRole,
   applyInitial24Simulation,
+  createInitialBracketChatMessage,
   generateSetsByFormat,
+  isSetCompletedOrDq,
   runAlgorithmBenchmark,
 } from './src/engine/nikBracketsEngine.ts';
 import {
@@ -213,7 +220,14 @@ function createDefaultTournament(
   gameSlug: string,
   format: TournamentFormat,
   entrants: OBFEntrant[],
-  prizePool = 25000
+  prizePool = 25000,
+  checkInConfig?: {
+    enableMatchCheckIn?: boolean;
+    matchCheckInTimeoutMinutes?: number;
+    enableAutoDq?: boolean;
+    doubleDqRule?: DoubleDqRule;
+    losersBracketDqPenalty?: LosersBracketDqPenalty;
+  }
 ): OBFDocument {
   const clonedEntrants = JSON.parse(JSON.stringify(entrants)) as OBFEntrant[];
   const sets = generateSetsByFormat(format, clonedEntrants);
@@ -235,6 +249,14 @@ function createDefaultTournament(
       venueFee: 25,
       entryFee: 25,
       prizePool,
+      enableMatchCheckIn: checkInConfig?.enableMatchCheckIn ?? true,
+      matchCheckInTimeoutMinutes: Math.min(
+        30,
+        Math.max(2, Number(checkInConfig?.matchCheckInTimeoutMinutes) || 5)
+      ),
+      enableAutoDq: checkInConfig?.enableAutoDq ?? true,
+      doubleDqRule: checkInConfig?.doubleDqRule || 'AUTO_BYE_NEXT_ROUND',
+      losersBracketDqPenalty: checkInConfig?.losersBracketDqPenalty || 'DROP_TO_LOSERS',
     },
     entrants: clonedEntrants,
     sets,
@@ -770,8 +792,13 @@ async function startServer() {
       const tSlug = tDoc.event.tournamentSlug;
       const tEngine = getEngine(tSlug);
       const tStandings = tEngine.getStandings();
-      const completedSetsCount = tDoc.sets.filter((s) => s.status === 'COMPLETED').length;
-      const readySetsCount = tDoc.sets.filter((s) => s.status === 'READY').length;
+      const completedSetsCount = tDoc.sets.filter((s) => isSetCompletedOrDq(s.status)).length;
+      const readySetsCount = tDoc.sets.filter(
+        (s) =>
+          s.status === 'READY' ||
+          s.status === 'WAITING_CHECKIN' ||
+          s.status === 'PARTIAL_CHECKIN'
+      ).length;
       const inProgressSetsCount = tDoc.sets.filter((s) => s.status === 'IN_PROGRESS').length;
       const creatorUid =
         tournamentCreators[tSlug] ||
@@ -878,6 +905,11 @@ async function startServer() {
       creatorUid,
       creatorEmail,
       creatorDisplayName,
+      enableMatchCheckIn,
+      matchCheckInTimeoutMinutes,
+      enableAutoDq,
+      doubleDqRule,
+      losersBracketDqPenalty,
     } = req.body as {
       name: string;
       gameName: string;
@@ -888,6 +920,11 @@ async function startServer() {
       creatorUid?: string;
       creatorEmail?: string;
       creatorDisplayName?: string;
+      enableMatchCheckIn?: boolean;
+      matchCheckInTimeoutMinutes?: number;
+      enableAutoDq?: boolean;
+      doubleDqRule?: DoubleDqRule;
+      losersBracketDqPenalty?: LosersBracketDqPenalty;
     };
 
     const slug = `${(name || 'torneo-obf').toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now().toString(36).slice(-4)}`;
@@ -922,7 +959,14 @@ async function startServer() {
       gameSlug || 'tekken8',
       format || 'two_stage',
       generatedEntrants,
-      Number(prizePool) || 15000
+      Number(prizePool) || 15000,
+      {
+        enableMatchCheckIn: enableMatchCheckIn ?? true,
+        matchCheckInTimeoutMinutes: Number(matchCheckInTimeoutMinutes) || 5,
+        enableAutoDq: enableAutoDq ?? true,
+        doubleDqRule: doubleDqRule || 'AUTO_BYE_NEXT_ROUND',
+        losersBracketDqPenalty: losersBracketDqPenalty || 'DROP_TO_LOSERS',
+      }
     );
 
     db.tournaments[slug] = newDoc;
@@ -931,6 +975,7 @@ async function startServer() {
     engines.set(slug, engine);
     redisCache.invalidateByTag(`tournament:${slug}`);
     saveDatabase();
+    scheduleTournamentCheckInJobs(slug);
 
     const effectiveCreatorUid = creatorUid || 'usr_owner_niklauss';
     await syncObfTournamentToPostgres(newDoc, effectiveCreatorUid).catch(() => {});
@@ -1384,6 +1429,436 @@ async function startServer() {
       simulatedSetID: readySet.setID,
       updatedSet,
       obf: engine.getDocument(),
+      standings: engine.getStandings(),
+    });
+  });
+
+  // ============================================================================
+  // 3B. WORKER DE COLAS EN REDIS (BULLMQ: match-checkin-queue) & ENDPOINTS CHECK-IN / DQ
+  // ============================================================================
+
+  const matchCheckInTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+  /**
+   * Ejecuta la evaluación del Worker BullMQ ('match-checkin-queue' -> 'check-in-timeout')
+   * al expirar el tiempo límite de Check-In o cuando el Árbitro lo dispara manualmente.
+   */
+  function processMatchCheckInTimeoutJob(slug: string, setId: string) {
+    const jobKey = `checkin-${slug}-${setId}`;
+    if (matchCheckInTimers.has(jobKey)) {
+      clearTimeout(matchCheckInTimers.get(jobKey)!);
+      matchCheckInTimers.delete(jobKey);
+    }
+
+    const engine = getEngine(slug);
+    const doc = engine.getDocument();
+    if (doc.event.enableMatchCheckIn === false || doc.event.enableAutoDq === false) {
+      return null;
+    }
+
+    const targetSet = engine.findSet(setId);
+    if (!targetSet || !targetSet.entrant1ID || !targetSet.entrant2ID) {
+      return null;
+    }
+
+    // Si la pelea ya inició o ya terminó, ignoramos el job
+    if (
+      targetSet.status === 'IN_PROGRESS' ||
+      targetSet.status === 'COMPLETED' ||
+      targetSet.status === 'SINGLE_DQ' ||
+      targetSet.status === 'DOUBLE_DQ'
+    ) {
+      return { outcome: 'ALREADY_ACTIVE' as const, set: targetSet };
+    }
+
+    if (targetSet.checkInPaused) {
+      return { outcome: 'PAUSED' as const, set: targetSet };
+    }
+
+    const p1 = engine.findEntrant(targetSet.entrant1ID);
+    const p2 = engine.findEntrant(targetSet.entrant2ID);
+    const evalResult = engine.evaluateMatchCheckInTimeout(setId);
+
+    redisCache.enqueueWriteBehind({
+      tournamentSlug: slug,
+      setID: setId,
+      score1: targetSet.entrant1Score,
+      score2: targetSet.entrant2Score,
+      winnerID: targetSet.winnerID,
+    });
+    saveDatabase(slug);
+
+    // Programar jobs de check-in para los nuevos sets de la siguiente ronda que hayan quedado listos
+    scheduleTournamentCheckInJobs(slug);
+
+    if (evalResult.outcome === 'SCENARIO_2_SINGLE_DQ' && evalResult.set) {
+      const winnerEntrant =
+        evalResult.winnerID === p1?.entrantID ? p1 : p2;
+      const dqEntrant =
+        evalResult.loserID === p1?.entrantID ? p1 : p2;
+
+      pushNotification(
+        'DISPUTE',
+        `Walkover por Inasistencia (SINGLE_DQ) en ${setId}`,
+        `${winnerEntrant?.entrantTag || 'Jugador Activo'} avanza automáticamente (${evalResult.set.entrant1Score} - ${evalResult.set.entrant2Score}) tras expirar el tiempo de Check-In de ${dqEntrant?.entrantTag || 'Oponente'}.`,
+        slug,
+        setId,
+        'high'
+      );
+
+      broadcastEvent('set.completed', {
+        setId,
+        winnerId: evalResult.winnerID,
+        isDq: true,
+        dqReason: evalResult.set.dqReason,
+      });
+    } else if (evalResult.outcome === 'SCENARIO_3_DOUBLE_DQ' && evalResult.set) {
+      const ruleUsed = evalResult.doubleDqAction || doc.event.doubleDqRule || 'AUTO_BYE_NEXT_ROUND';
+      pushNotification(
+        'DISPUTE',
+        `Descalificación Doble (DOUBLE_DQ) en ${setId}`,
+        `Ninguno de los jugadores (${p1?.entrantTag || 'P1'} vs ${p2?.entrantTag || 'P2'}) realizó Check-In a tiempo. Regla aplicada: ${ruleUsed}.`,
+        slug,
+        setId,
+        'critical'
+      );
+
+      broadcastEvent('set.double_dq', {
+        setId,
+        doubleDqRule: ruleUsed,
+        dqReason: 'DOUBLE_TIMEOUT',
+      });
+    }
+
+    broadcastEvent('match:updated', {
+      activeTournamentSlug: slug,
+      updatedSet: evalResult.set,
+      obf: engine.getDocument(),
+      standings: engine.getStandings(),
+    });
+
+    return evalResult;
+  }
+
+  /**
+   * Programa una tarea retrasada (Delayed Job) en el Worker BullMQ para evaluar el Check-In
+   */
+  function scheduleCheckInTimeout(
+    slug: string,
+    setId: string,
+    timeoutMinutes: number,
+    customDelayMs?: number
+  ) {
+    const jobKey = `checkin-${slug}-${setId}`;
+    if (matchCheckInTimers.has(jobKey)) {
+      clearTimeout(matchCheckInTimers.get(jobKey)!);
+      matchCheckInTimers.delete(jobKey);
+    }
+
+    const engine = getEngine(slug);
+    const doc = engine.getDocument();
+    if (doc.event.enableMatchCheckIn === false || doc.event.enableAutoDq === false) {
+      return;
+    }
+
+    const set = engine.findSet(setId);
+    if (!set || !set.entrant1ID || !set.entrant2ID || set.checkInPaused) {
+      return;
+    }
+    if (
+      set.status === 'IN_PROGRESS' ||
+      set.status === 'COMPLETED' ||
+      set.status === 'SINGLE_DQ' ||
+      set.status === 'DOUBLE_DQ'
+    ) {
+      return;
+    }
+
+    const delayMs =
+      customDelayMs !== undefined
+        ? Math.max(1000, customDelayMs)
+        : Math.max(5000, timeoutMinutes * 60 * 1000);
+
+    const timer = setTimeout(() => {
+      processMatchCheckInTimeoutJob(slug, setId);
+    }, delayMs);
+
+    matchCheckInTimers.set(jobKey, timer);
+  }
+
+  function scheduleTournamentCheckInJobs(slug: string) {
+    const engine = getEngine(slug);
+    const doc = engine.getDocument();
+    if (doc.event.enableMatchCheckIn === false || doc.event.enableAutoDq === false) {
+      return;
+    }
+    const timeoutMinutes = Math.min(30, Math.max(2, doc.event.matchCheckInTimeoutMinutes || 5));
+    for (const set of doc.sets) {
+      if (
+        set.entrant1ID &&
+        set.entrant2ID &&
+        (set.status === 'READY' ||
+          set.status === 'WAITING_CHECKIN' ||
+          set.status === 'PARTIAL_CHECKIN') &&
+        !set.checkInPaused
+      ) {
+        const deadlineMs = set.checkInDeadlineAt
+          ? new Date(set.checkInDeadlineAt).getTime() - Date.now()
+          : timeoutMinutes * 60 * 1000;
+        scheduleCheckInTimeout(slug, set.setID, timeoutMinutes, Math.max(15000, deadlineMs));
+      }
+    }
+  }
+
+  // Inicializar jobs de Check-In para los torneos cargados
+  for (const slug of Object.keys(db.tournaments)) {
+    scheduleTournamentCheckInJobs(slug);
+  }
+
+  // Endpoint 1: Realizar Check-In en una Pelea/Set (Jugador o Árbitro)
+  app.post('/api/tournaments/:slug/sets/:setId/checkin', (req, res) => {
+    const { slug, setId } = req.params;
+    const { slot, entrantId, gamerTag } = req.body as {
+      slot?: 1 | 2 | 'BOTH';
+      entrantId?: string;
+      gamerTag?: string;
+    };
+
+    const engine = getEngine(slug);
+    const doc = engine.getDocument();
+    const set = engine.findSet(setId);
+    if (!set || !set.entrant1ID || !set.entrant2ID) {
+      res.status(400).json({ error: 'El set no existe o aún no tiene ambos rivales definidos.' });
+      return;
+    }
+
+    const p1 = engine.findEntrant(set.entrant1ID);
+    const p2 = engine.findEntrant(set.entrant2ID);
+
+    let resolvedSlot: 1 | 2 | 'BOTH' = slot || 'BOTH';
+    if (!slot) {
+      if (entrantId === set.entrant1ID) {
+        resolvedSlot = 1;
+      } else if (entrantId === set.entrant2ID) {
+        resolvedSlot = 2;
+      } else if (gamerTag) {
+        const norm = gamerTag.trim().toLowerCase().split('#')[0];
+        if (p1?.entrantTag.toLowerCase().split('#')[0] === norm) {
+          resolvedSlot = 1;
+        } else if (p2?.entrantTag.toLowerCase().split('#')[0] === norm) {
+          resolvedSlot = 2;
+        }
+      }
+    }
+
+    const result = engine.performMatchCheckIn(setId, resolvedSlot);
+    if (!result.set) {
+      res.status(400).json({ error: 'No se pudo procesar el Check-In del set.' });
+      return;
+    }
+
+    const timeoutMinutes = Math.min(30, Math.max(2, doc.event.matchCheckInTimeoutMinutes || 5));
+    if (result.transitionedToInProgress) {
+      const jobKey = `checkin-${slug}-${setId}`;
+      if (matchCheckInTimers.has(jobKey)) {
+        clearTimeout(matchCheckInTimers.get(jobKey)!);
+        matchCheckInTimers.delete(jobKey);
+      }
+      pushNotification(
+        'MATCH_READY',
+        `Check-In Completo en ${setId} — Pelea en Curso`,
+        `Ambos jugadores (${p1?.entrantTag || 'P1'} y ${p2?.entrantTag || 'P2'}) confirmaron asistencia. ¡Pantalla de reporte de marcador activada!`,
+        slug,
+        setId,
+        'normal'
+      );
+    } else {
+      scheduleCheckInTimeout(slug, setId, timeoutMinutes);
+      const checkedPlayer = resolvedSlot === 1 ? p1?.entrantTag : p2?.entrantTag;
+      const waitingPlayer = resolvedSlot === 1 ? p2?.entrantTag : p1?.entrantTag;
+      pushNotification(
+        'MATCH_READY',
+        `Check-In Parcial en ${setId} (${checkedPlayer || 'Jugador'})`,
+        `Esperando a ${waitingPlayer || 'el oponente'} (Tiempo límite: ${timeoutMinutes} min antes de Walkover/DQ automático).`,
+        slug,
+        setId,
+        'normal'
+      );
+    }
+
+    redisCache.invalidateByTag(`tournament:${slug}`);
+    saveDatabase(slug);
+
+    broadcastEvent('match:updated', {
+      activeTournamentSlug: slug,
+      updatedSet: result.set,
+      obf: engine.getDocument(),
+      standings: engine.getStandings(),
+    });
+
+    res.json({
+      status: result.set.status,
+      updatedSet: result.set,
+      transitionedToInProgress: result.transitionedToInProgress,
+      obf: engine.getDocument(),
+      standings: engine.getStandings(),
+    });
+  });
+
+  // Endpoint 2: Control Manual del Árbitro / Admin sobre el Check-In, Timer y DQ
+  app.post('/api/tournaments/:slug/sets/:setId/checkin-admin', (req, res) => {
+    const { slug, setId } = req.params;
+    const { action } = req.body as {
+      action:
+        | 'FORCE_P1'
+        | 'FORCE_P2'
+        | 'FORCE_BOTH'
+        | 'PAUSE_TIMER'
+        | 'RESUME_TIMER'
+        | 'RESET_CHECKIN'
+        | 'REVERT_DQ'
+        | 'TRIGGER_TIMEOUT_NOW';
+    };
+
+    const engine = getEngine(slug);
+    const doc = engine.getDocument();
+
+    if (action === 'TRIGGER_TIMEOUT_NOW') {
+      const target = engine.findSet(setId);
+      if (target) target.checkInPaused = false;
+      const evalRes = processMatchCheckInTimeoutJob(slug, setId);
+      res.json({
+        status: 'TIMEOUT_EVALUATED',
+        outcome: evalRes?.outcome,
+        updatedSet: evalRes?.set || engine.findSet(setId),
+        obf: engine.getDocument(),
+        standings: engine.getStandings(),
+      });
+      return;
+    }
+
+    const updatedSet = engine.adminControlMatchCheckIn(setId, action);
+    if (!updatedSet) {
+      res.status(404).json({ error: 'Set no encontrado.' });
+      return;
+    }
+
+    const jobKey = `checkin-${slug}-${setId}`;
+    const timeoutMinutes = Math.min(30, Math.max(2, doc.event.matchCheckInTimeoutMinutes || 5));
+
+    if (action === 'PAUSE_TIMER' || action === 'FORCE_BOTH') {
+      if (matchCheckInTimers.has(jobKey)) {
+        clearTimeout(matchCheckInTimers.get(jobKey)!);
+        matchCheckInTimers.delete(jobKey);
+      }
+    } else if (action === 'RESUME_TIMER' || action === 'RESET_CHECKIN' || action === 'REVERT_DQ') {
+      const remainingMs = updatedSet.checkInDeadlineAt
+        ? Math.max(5000, new Date(updatedSet.checkInDeadlineAt).getTime() - Date.now())
+        : timeoutMinutes * 60 * 1000;
+      scheduleCheckInTimeout(slug, setId, timeoutMinutes, remainingMs);
+    }
+
+    redisCache.invalidateByTag(`tournament:${slug}`);
+    saveDatabase(slug);
+
+    broadcastEvent('match:updated', {
+      activeTournamentSlug: slug,
+      updatedSet,
+      obf: engine.getDocument(),
+      standings: engine.getStandings(),
+    });
+
+    res.json({
+      status: 'ADMIN_ACTION_APPLIED',
+      action,
+      updatedSet,
+      obf: engine.getDocument(),
+      standings: engine.getStandings(),
+    });
+  });
+
+  // Endpoint 3: Actualizar Configuración Graduable de Check-In y DQ del Torneo
+  app.post('/api/tournaments/:slug/checkin-config', (req, res) => {
+    const { slug } = req.params;
+    const {
+      enableMatchCheckIn,
+      matchCheckInTimeoutMinutes,
+      enableAutoDq,
+      doubleDqRule,
+      losersBracketDqPenalty,
+    } = req.body as {
+      enableMatchCheckIn?: boolean;
+      matchCheckInTimeoutMinutes?: number;
+      enableAutoDq?: boolean;
+      doubleDqRule?: DoubleDqRule;
+      losersBracketDqPenalty?: LosersBracketDqPenalty;
+    };
+
+    const engine = getEngine(slug);
+    const doc = engine.getDocument();
+
+    if (enableMatchCheckIn !== undefined) {
+      doc.event.enableMatchCheckIn = Boolean(enableMatchCheckIn);
+    }
+    if (matchCheckInTimeoutMinutes !== undefined) {
+      doc.event.matchCheckInTimeoutMinutes = Math.min(
+        30,
+        Math.max(2, Number(matchCheckInTimeoutMinutes) || 5)
+      );
+    }
+    if (enableAutoDq !== undefined) {
+      doc.event.enableAutoDq = Boolean(enableAutoDq);
+    }
+    if (doubleDqRule) {
+      doc.event.doubleDqRule = doubleDqRule;
+    }
+    if (losersBracketDqPenalty) {
+      doc.event.losersBracketDqPenalty = losersBracketDqPenalty;
+    }
+
+    const timeoutMs = (doc.event.matchCheckInTimeoutMinutes || 5) * 60 * 1000;
+    const now = Date.now();
+    for (const s of doc.sets) {
+      if (
+        s.entrant1ID &&
+        s.entrant2ID &&
+        (s.status === 'READY' ||
+          s.status === 'WAITING_CHECKIN' ||
+          s.status === 'PARTIAL_CHECKIN')
+      ) {
+        if (doc.event.enableMatchCheckIn) {
+          s.status =
+            s.player1CheckedIn || s.player2CheckedIn ? 'PARTIAL_CHECKIN' : 'WAITING_CHECKIN';
+          s.checkInStartedAt = new Date(now).toISOString();
+          s.checkInDeadlineAt = new Date(now + timeoutMs).toISOString();
+        } else {
+          s.status = 'READY';
+        }
+      }
+    }
+
+    scheduleTournamentCheckInJobs(slug);
+    redisCache.invalidateByTag(`tournament:${slug}`);
+    saveDatabase(slug);
+
+    pushNotification(
+      'MATCH_READY',
+      `Reglas de Match Check-In Actualizadas (${doc.event.name})`,
+      `Check-In: ${doc.event.enableMatchCheckIn ? 'Activado' : 'Desactivado'} · Timeout: ${doc.event.matchCheckInTimeoutMinutes} min · Double DQ: ${doc.event.doubleDqRule} · Penalización Winners: ${doc.event.losersBracketDqPenalty}.`,
+      slug
+    );
+
+    broadcastEvent('tournament:updated', {
+      activeTournamentSlug: slug,
+      tournamentList: Object.values(db.tournaments).map((t) => t.event),
+      obf: doc,
+      standings: engine.getStandings(),
+    });
+
+    res.json({
+      status: 'CHECKIN_CONFIG_UPDATED',
+      event: doc.event,
+      obf: doc,
       standings: engine.getStandings(),
     });
   });
@@ -2726,6 +3201,165 @@ async function startServer() {
     } catch (error: any) {
       console.error('Error in self-register:', error);
       res.status(500).json({ error: error.message || 'No se pudo completar la inscripción.' });
+    }
+  });
+
+  // Vincular, actualizar configuración o desvincular la sesión de Google Meet opcional de un torneo específico
+  app.post('/api/tournaments/:slug/google-meet', requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const caller = req.dbUser!;
+      const { slug } = req.params;
+      const { googleMeet } = req.body as {
+        googleMeet: TournamentGoogleMeetSession | null;
+      };
+
+      const engine = getEngine(slug);
+      const doc = engine.getDocument();
+      doc.event.googleMeet = googleMeet
+        ? {
+            ...googleMeet,
+            createdByEmail: googleMeet.createdByEmail || caller.email,
+            createdByName: googleMeet.createdByName || caller.displayName,
+            updatedAt: new Date().toISOString(),
+          }
+        : null;
+
+      if (googleMeet) {
+        const meetNotice = `📹 Sala Google Meet (${googleMeet.meetingCode}) iniciada por ${caller.displayName}. Aquí están todos los brackets actualizados de quién contra quién le toca (Texto y 2D):`;
+        const announceMsg = createInitialBracketChatMessage(doc, meetNotice);
+        if (!doc.event.chatMessages || doc.event.chatMessages.length === 0) {
+          doc.event.chatMessages = [announceMsg];
+        } else {
+          doc.event.chatMessages = [
+            announceMsg,
+            ...doc.event.chatMessages.filter((m) => m.messageType !== 'BRACKET_ANNOUNCEMENT'),
+          ].slice(0, 60);
+        }
+      }
+
+      redisCache.invalidateByTag(`tournament:${slug}`);
+      saveDatabase(slug);
+
+      await recordAuditLog({
+        userUid: caller.uid,
+        userEmail: caller.email,
+        userRole: caller.globalRole,
+        action: googleMeet ? 'GOOGLE_MEET_ROOM_LINKED' : 'GOOGLE_MEET_ROOM_UNLINKED',
+        tournamentSlug: slug,
+        targetId: googleMeet?.spaceName || slug,
+        details: googleMeet
+          ? `Sesión Google Meet habilitada para inscritos en ${doc.event.name}: ${googleMeet.meetingUri} (${googleMeet.accessType}) con publicación automática de brackets en el chat.`
+          : `Sesión Google Meet desvinculada del torneo ${doc.event.name}.`,
+      });
+
+      if (googleMeet) {
+        pushNotification(
+          'MATCH_READY',
+          `Google Meet + Brackets en Chat: ${doc.event.name}`,
+          `Sala opcional (${googleMeet.meetingCode}) creada con todos los enfrentamientos publicados en el chat.`,
+          slug
+        );
+      }
+
+      broadcastEvent('tournament:updated', {
+        activeTournamentSlug: slug,
+        tournamentList: Object.values(db.tournaments).map((t) => t.event),
+        obf: doc,
+        standings: engine.getStandings(),
+      });
+
+      res.json({
+        googleMeet: doc.event.googleMeet,
+        obf: doc,
+      });
+    } catch (error: any) {
+      console.error('Error updating tournament Google Meet room:', error);
+      res.status(500).json({
+        error: error.message || 'No se pudo actualizar la sesión de Google Meet del torneo.',
+      });
+    }
+  });
+
+  // Publicar mensaje o actualizar los brackets (Texto / 2D) en el chat del torneo y lobby Google Meet
+  app.post('/api/tournaments/:slug/chat', requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const caller = req.dbUser!;
+      const { slug } = req.params;
+      const { text, messageType, bracketDisplayMode } = req.body as {
+        text?: string;
+        messageType?: 'BRACKET_ANNOUNCEMENT' | 'USER_MESSAGE';
+        bracketDisplayMode?: ChatBracketDisplayMode;
+      };
+
+      const engine = getEngine(slug);
+      const doc = engine.getDocument();
+      if (!doc.event.chatMessages) {
+        doc.event.chatMessages = [createInitialBracketChatMessage(doc)];
+      }
+
+      let newMsg: TournamentChatMessage;
+      if (messageType === 'BRACKET_ANNOUNCEMENT') {
+        const baseAnnouncement = createInitialBracketChatMessage(
+          doc,
+          text?.trim() ||
+            `📋 Brackets actualizados por ${caller.displayName} (${caller.gamerTag}) — Enfrentamientos de quién contra quién:`
+        );
+        newMsg = {
+          ...baseAnnouncement,
+          senderName: caller.displayName,
+          senderTag: caller.gamerTag,
+          senderRole: caller.globalRole,
+          bracketDisplayMode: bracketDisplayMode || 'BOTH',
+        };
+      } else {
+        const cleanText = (text || '').trim();
+        if (!cleanText) {
+          res.status(400).json({ error: 'Escribe un mensaje para enviar al chat del torneo.' });
+          return;
+        }
+        newMsg = {
+          id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          senderName: caller.displayName,
+          senderTag: caller.gamerTag,
+          senderRole: caller.globalRole,
+          text: cleanText,
+          messageType: 'USER_MESSAGE',
+          createdAt: new Date().toISOString(),
+        };
+      }
+
+      doc.event.chatMessages.push(newMsg);
+      if (doc.event.chatMessages.length > 80) {
+        const pinnedFirst = doc.event.chatMessages.find(
+          (m) => m.messageType === 'BRACKET_ANNOUNCEMENT'
+        );
+        const rest = doc.event.chatMessages.slice(-79);
+        doc.event.chatMessages =
+          pinnedFirst && !rest.some((m) => m.id === pinnedFirst.id)
+            ? [pinnedFirst, ...rest]
+            : rest;
+      }
+
+      redisCache.invalidateByTag(`tournament:${slug}`);
+      saveDatabase(slug);
+
+      broadcastEvent('tournament:updated', {
+        activeTournamentSlug: slug,
+        tournamentList: Object.values(db.tournaments).map((t) => t.event),
+        obf: doc,
+        standings: engine.getStandings(),
+      });
+
+      res.json({
+        message: newMsg,
+        chatMessages: doc.event.chatMessages,
+        obf: doc,
+      });
+    } catch (error: any) {
+      console.error('Error posting tournament chat message:', error);
+      res.status(500).json({
+        error: error.message || 'No se pudo publicar el mensaje en el chat del torneo.',
+      });
     }
   });
 

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { GoogleAuthProvider } from 'firebase/auth';
 import {
   auth,
   googleAuthProvider,
+  setGoogleAccessToken,
   signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -328,6 +330,10 @@ export const AuthDialogModal: React.FC<AuthModalProps> = ({
     setSuccessMsg('');
     try {
       const credential = await signInWithPopup(auth, googleAuthProvider);
+      const oauthCred = GoogleAuthProvider.credentialFromResult(credential);
+      if (oauthCred?.accessToken) {
+        setGoogleAccessToken(oauthCred.accessToken);
+      }
       const idToken = await credential.user.getIdToken();
       const res = await fetch('/api/auth/sync', {
         method: 'POST',
@@ -1897,14 +1903,14 @@ export const UsersRolesAndTreasuryPanel: React.FC<UsersRolesAndTreasuryPanelProp
     activeRole === 'SUPER_ADMIN' ||
     activeRole === 'TOURNAMENT_DIRECTOR';
 
-  const filteredUsers = usersList.filter((u) => {
-    const q = userSearch.trim().toLowerCase();
+  const filteredUsers = (usersList || []).filter((u) => {
+    const q = (userSearch || '').trim().toLowerCase();
     if (!q) return true;
     return (
-      u.displayName.toLowerCase().includes(q) ||
-      u.email.toLowerCase().includes(q) ||
-      u.gamerTag.toLowerCase().includes(q) ||
-      u.globalRole.toLowerCase().includes(q)
+      (u.displayName || '').toLowerCase().includes(q) ||
+      (u.email || '').toLowerCase().includes(q) ||
+      (u.gamerTag || '').toLowerCase().includes(q) ||
+      (u.globalRole || '').toLowerCase().includes(q)
     );
   });
 
@@ -2020,16 +2026,21 @@ export const UsersRolesAndTreasuryPanel: React.FC<UsersRolesAndTreasuryPanelProp
       <div className="border border-slate-800 bg-slate-900/90 rounded-xl p-5 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
           <div className="w-10 h-10 rounded-full bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sm font-bold text-sky-300">
-            {currentUser ? currentUser.displayName.slice(0, 2).toUpperCase() : 'G'}
+            {currentUser
+              ? (currentUser.displayName || currentUser.gamerTag || 'U').slice(0, 2).toUpperCase()
+              : 'G'}
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-sm font-bold text-white">
-                {currentUser ? currentUser.displayName : 'Sesión Invitado (Sin Autenticar)'}
+                {currentUser
+                  ? currentUser.displayName || currentUser.gamerTag || currentUser.email
+                  : 'Sesión Invitado (Sin Autenticar)'}
               </span>
               {currentUser && (
                 <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30">
-                  {currentUser.authProvider.toUpperCase()} · {currentUser.globalRole}
+                  {(currentUser.authProvider || 'email').toUpperCase()} ·{' '}
+                  {currentUser.globalRole || 'USER'}
                 </span>
               )}
               {currentUser?.gameAccounts && currentUser.gameAccounts.length > 0 && (

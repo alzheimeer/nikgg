@@ -25,13 +25,17 @@ import {
   Camera,
   Check,
   Clock,
+  Pause,
+  Play,
   Plus,
   RotateCcw,
+  ShieldAlert,
   Shuffle,
   Trash2,
   Trophy,
   Tv,
   UserCheck,
+  Zap,
 } from 'lucide-react';
 
 interface ParticipantsViewProps {
@@ -350,6 +354,19 @@ interface RefereeStationConsoleProps {
     disputeReason?: string;
   }) => Promise<void>;
   onCascadeReset: (setID: string) => Promise<void>;
+  onMatchCheckIn?: (setID: string, slot?: 1 | 2 | 'BOTH') => Promise<void>;
+  onAdminCheckInAction?: (
+    setID: string,
+    action:
+      | 'FORCE_P1'
+      | 'FORCE_P2'
+      | 'FORCE_BOTH'
+      | 'PAUSE_TIMER'
+      | 'RESUME_TIMER'
+      | 'RESET_CHECKIN'
+      | 'REVERT_DQ'
+      | 'TRIGGER_TIMEOUT_NOW'
+  ) => Promise<void>;
   onVerifyVisionAi: (setID: string, proofUrl: string) => Promise<{
     detectedScore1: number;
     detectedScore2: number;
@@ -371,6 +388,8 @@ export const RefereeStationConsole: React.FC<RefereeStationConsoleProps> = ({
   onOpenLogin,
   onConfirmScore,
   onCascadeReset,
+  onMatchCheckIn,
+  onAdminCheckInAction,
   onVerifyVisionAi,
 }) => {
   const gameCatalog =
@@ -452,6 +471,52 @@ export const RefereeStationConsole: React.FC<RefereeStationConsoleProps> = ({
     setDisputeTimerSeconds(180);
     setTimerRunning(selectedSet.status === 'IN_PROGRESS' || selectedSet.status === 'DISPUTED');
   }, [selectedSet, p1, p2, gameCatalog]);
+
+  // Countdown en vivo sincronizado con checkInDeadlineAt del Set
+  const [checkInRemainingSeconds, setCheckInRemainingSeconds] = useState<number>(() => {
+    const defaultSecs = (obf.event.matchCheckInTimeoutMinutes || 5) * 60;
+    if (selectedSet.checkInPaused && selectedSet.checkInPausedRemainingMs) {
+      return Math.max(0, Math.floor(selectedSet.checkInPausedRemainingMs / 1000));
+    }
+    if (selectedSet.checkInDeadlineAt) {
+      return Math.max(
+        0,
+        Math.floor((new Date(selectedSet.checkInDeadlineAt).getTime() - Date.now()) / 1000)
+      );
+    }
+    return defaultSecs;
+  });
+
+  useEffect(() => {
+    const updateRemaining = () => {
+      const defaultSecs = (obf.event.matchCheckInTimeoutMinutes || 5) * 60;
+      if (selectedSet.checkInPaused) {
+        if (selectedSet.checkInPausedRemainingMs) {
+          setCheckInRemainingSeconds(
+            Math.max(0, Math.floor(selectedSet.checkInPausedRemainingMs / 1000))
+          );
+        }
+        return;
+      }
+      if (selectedSet.checkInDeadlineAt) {
+        const diff = Math.floor(
+          (new Date(selectedSet.checkInDeadlineAt).getTime() - Date.now()) / 1000
+        );
+        setCheckInRemainingSeconds(Math.max(0, diff));
+      } else {
+        setCheckInRemainingSeconds(defaultSecs);
+      }
+    };
+    updateRemaining();
+    const timerId = setInterval(updateRemaining, 1000);
+    return () => clearInterval(timerId);
+  }, [
+    selectedSet.setID,
+    selectedSet.checkInDeadlineAt,
+    selectedSet.checkInPaused,
+    selectedSet.checkInPausedRemainingMs,
+    obf.event.matchCheckInTimeoutMinutes,
+  ]);
 
   useEffect(() => {
     if (!timerRunning) return;
@@ -623,7 +688,258 @@ export const RefereeStationConsole: React.FC<RefereeStationConsoleProps> = ({
         </div>
       )}
 
-      {/* Controles Táctiles de Marcador + IDs de Consola y MAIN para Casters/Árbitros */}
+      {/* MÁQUINA DE ESTADOS DE MATCH CHECK-IN, SINGLE DQ & DOUBLE DQ */}
+      {p1 && p2 && obf.event.enableMatchCheckIn !== false && (
+        <div
+          className={`rounded-xl border p-3.5 flex flex-col gap-3 text-xs ${
+            selectedSet.status === 'SINGLE_DQ' ||
+            selectedSet.status === 'DOUBLE_DQ' ||
+            selectedSet.isDq
+              ? 'border-rose-500/50 bg-rose-950/25'
+              : selectedSet.status === 'IN_PROGRESS'
+              ? 'border-cyan-400/50 bg-cyan-950/20'
+              : 'border-amber-400/50 bg-amber-950/20'
+          }`}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
+            <div className="flex items-center gap-2">
+              <UserCheck
+                className={`w-4 h-4 shrink-0 ${
+                  selectedSet.status === 'SINGLE_DQ' || selectedSet.status === 'DOUBLE_DQ'
+                    ? 'text-rose-400'
+                    : selectedSet.status === 'IN_PROGRESS'
+                    ? 'text-cyan-400'
+                    : 'text-amber-400'
+                }`}
+              />
+              <div>
+                <div className="font-bold text-white flex flex-wrap items-center gap-1.5">
+                  <span>Check-In a Nivel de Pelea/Set ({selectedSet.setID})</span>
+                  <span
+                    className={`px-2 py-0.5 rounded font-mono text-[10px] font-semibold ${
+                      selectedSet.status === 'SINGLE_DQ' || selectedSet.status === 'DOUBLE_DQ'
+                        ? 'bg-rose-500/25 text-rose-200 border border-rose-500/40'
+                        : selectedSet.status === 'IN_PROGRESS'
+                        ? 'bg-cyan-500/20 text-cyan-200 border border-cyan-400/40'
+                        : 'bg-amber-500/20 text-amber-200 border border-amber-400/40'
+                    }`}
+                  >
+                    {selectedSet.status === 'SINGLE_DQ'
+                      ? 'SINGLE_DQ (WALKOVER 2-0)'
+                      : selectedSet.status === 'DOUBLE_DQ'
+                      ? `DOUBLE_DQ (${obf.event.doubleDqRule || 'AUTO_BYE_NEXT_ROUND'})`
+                      : selectedSet.status === 'IN_PROGRESS'
+                      ? 'IN_PROGRESS (<SingleScreenScoreReporter /> ACTIVO)'
+                      : selectedSet.player1CheckedIn || selectedSet.player2CheckedIn
+                      ? 'PARTIAL_CHECKIN (1/2 CONFIRMADO)'
+                      : 'WAITING_CHECKIN (0/2 CONFIRMADOS)'}
+                  </span>
+                </div>
+                <div className="text-[11px] text-slate-300 mt-0.5">
+                  Timeout reglamentario: <strong>{obf.event.matchCheckInTimeoutMinutes || 5} min</strong> · Regla Double DQ:{' '}
+                  <code className="text-sky-300">{obf.event.doubleDqRule || 'AUTO_BYE_NEXT_ROUND'}</code>
+                </div>
+              </div>
+            </div>
+
+            {/* Reloj de Cuenta Regresiva del Check-In */}
+            <div className="flex items-center gap-2 font-mono tabular-nums">
+              <div
+                className={`px-2.5 py-1 rounded-lg border text-xs font-bold flex items-center gap-1.5 ${
+                  selectedSet.checkInPaused
+                    ? 'border-amber-400/50 bg-amber-950/60 text-amber-200'
+                    : selectedSet.status === 'IN_PROGRESS' || selectedSet.status === 'COMPLETED'
+                    ? 'border-emerald-500/40 bg-emerald-950/40 text-emerald-300'
+                    : checkInRemainingSeconds <= 60
+                    ? 'border-rose-500/60 bg-rose-950/60 text-rose-300 animate-pulse'
+                    : 'border-slate-700 bg-slate-950 text-amber-300'
+                }`}
+              >
+                <Clock className="w-3.5 h-3.5" />
+                <span>
+                  {selectedSet.status === 'IN_PROGRESS' || selectedSet.status === 'COMPLETED'
+                    ? 'CHECK-IN OK'
+                    : selectedSet.checkInPaused
+                    ? `PAUSADO (${formatTimer(checkInRemainingSeconds)})`
+                    : `Timer: ${formatTimer(checkInRemainingSeconds)}`}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Tarjetas de estado de Check-In individual por Jugador */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div
+              className={`p-2.5 rounded-lg border flex items-center justify-between gap-2 ${
+                selectedSet.entrant1Forfeit ||
+                selectedSet.status === 'DOUBLE_DQ' ||
+                selectedSet.dqReason === 'PLAYER1_TIMEOUT'
+                  ? 'border-rose-500/50 bg-rose-950/30 text-rose-200'
+                  : selectedSet.player1CheckedIn
+                  ? 'border-emerald-500/40 bg-emerald-950/25 text-emerald-200'
+                  : 'border-slate-800 bg-slate-950/90 text-slate-300'
+              }`}
+            >
+              <div className="min-w-0">
+                <div className="font-semibold text-white truncate">
+                  P1: {p1.entrantTag}
+                </div>
+                <div className="text-[10px] font-mono">
+                  {selectedSet.entrant1Forfeit ||
+                  selectedSet.status === 'DOUBLE_DQ' ||
+                  selectedSet.dqReason === 'PLAYER1_TIMEOUT'
+                    ? 'ESTADO: DQ (Forfeit por Timeout)'
+                    : selectedSet.player1CheckedIn
+                    ? '✓ CHECK-IN CONFIRMADO'
+                    : '⏳ ESPERANDO CHECK-IN...'}
+                </div>
+              </div>
+              {onMatchCheckIn &&
+                !selectedSet.player1CheckedIn &&
+                selectedSet.status !== 'COMPLETED' &&
+                (canCascadeReset || myEntrantID === p1.entrantID) && (
+                  <button
+                    type="button"
+                    onClick={() => onMatchCheckIn(selectedSet.setID, 1)}
+                    className="px-2.5 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-[11px] font-mono whitespace-nowrap shrink-0 cursor-pointer"
+                  >
+                    Check-In P1
+                  </button>
+                )}
+            </div>
+
+            <div
+              className={`p-2.5 rounded-lg border flex items-center justify-between gap-2 ${
+                selectedSet.entrant2Forfeit ||
+                selectedSet.status === 'DOUBLE_DQ' ||
+                selectedSet.dqReason === 'PLAYER2_TIMEOUT'
+                  ? 'border-rose-500/50 bg-rose-950/30 text-rose-200'
+                  : selectedSet.player2CheckedIn
+                  ? 'border-emerald-500/40 bg-emerald-950/25 text-emerald-200'
+                  : 'border-slate-800 bg-slate-950/90 text-slate-300'
+              }`}
+            >
+              <div className="min-w-0">
+                <div className="font-semibold text-white truncate">
+                  P2: {p2.entrantTag}
+                </div>
+                <div className="text-[10px] font-mono">
+                  {selectedSet.entrant2Forfeit ||
+                  selectedSet.status === 'DOUBLE_DQ' ||
+                  selectedSet.dqReason === 'PLAYER2_TIMEOUT'
+                    ? 'ESTADO: DQ (Forfeit por Timeout)'
+                    : selectedSet.player2CheckedIn
+                    ? '✓ CHECK-IN CONFIRMADO'
+                    : '⏳ ESPERANDO CHECK-IN...'}
+                </div>
+              </div>
+              {onMatchCheckIn &&
+                !selectedSet.player2CheckedIn &&
+                selectedSet.status !== 'COMPLETED' &&
+                (canCascadeReset || myEntrantID === p2.entrantID) && (
+                  <button
+                    type="button"
+                    onClick={() => onMatchCheckIn(selectedSet.setID, 2)}
+                    className="px-2.5 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-[11px] font-mono whitespace-nowrap shrink-0 cursor-pointer"
+                  >
+                    Check-In P2
+                  </button>
+                )}
+            </div>
+          </div>
+
+          {/* Botón Principal de Check-In para el Jugador Activo */}
+          {onMatchCheckIn &&
+            isMySelectedSet &&
+            !(
+              (myEntrantID === p1.entrantID && selectedSet.player1CheckedIn) ||
+              (myEntrantID === p2.entrantID && selectedSet.player2CheckedIn)
+            ) && (
+              <button
+                type="button"
+                onClick={() =>
+                  onMatchCheckIn(selectedSet.setID, myEntrantID === p1.entrantID ? 1 : 2)
+                }
+                className="w-full py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs font-mono tracking-wide flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 cursor-pointer"
+              >
+                <UserCheck className="w-4 h-4" />
+                [ HACER CHECK-IN ({formatTimer(checkInRemainingSeconds)}) ]
+              </button>
+            )}
+
+          {/* Controles Manuales para el Árbitro / Administrador (Pausar Timer, Forzar Check-In, Evaluar DQ, Revertir DQ) */}
+          {canCascadeReset && onAdminCheckInAction && (
+            <div className="pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2">
+              <span className="text-[11px] font-mono text-slate-400">
+                Control Arbitral Check-In / BullMQ:
+              </span>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => onAdminCheckInAction(selectedSet.setID, 'FORCE_BOTH')}
+                  className="px-2.5 py-1 rounded-md bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/40 text-cyan-200 font-mono text-[11px] flex items-center gap-1 cursor-pointer"
+                  title="Forzar Check-In de ambos jugadores y pasar a IN_PROGRESS"
+                >
+                  <Check className="w-3 h-3" />
+                  Forzar Ambos (OK)
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    onAdminCheckInAction(
+                      selectedSet.setID,
+                      selectedSet.checkInPaused ? 'RESUME_TIMER' : 'PAUSE_TIMER'
+                    )
+                  }
+                  className="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-mono text-[11px] flex items-center gap-1 cursor-pointer"
+                  title="Pausar o reanudar el Timer de Check-In (ej. jugador avisó que fue al baño o problema técnico)"
+                >
+                  {selectedSet.checkInPaused ? (
+                    <>
+                      <Play className="w-3 h-3 text-emerald-400" />
+                      Reanudar Timer
+                    </>
+                  ) : (
+                    <>
+                      <Pause className="w-3 h-3 text-amber-400" />
+                      Pausar Timer
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => onAdminCheckInAction(selectedSet.setID, 'TRIGGER_TIMEOUT_NOW')}
+                  className="px-2.5 py-1 rounded-md bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-200 font-mono text-[11px] flex items-center gap-1 cursor-pointer"
+                  title="Simular expiración del tiempo límite ahora mismo (Aplica SINGLE_DQ 2-0 si 1 hizo Check-In, o DOUBLE_DQ si ninguno hizo Check-In)"
+                >
+                  <Zap className="w-3 h-3 text-rose-400" />
+                  Evaluar Timeout (Aplicar DQ)
+                </button>
+
+                {(selectedSet.status === 'SINGLE_DQ' ||
+                  selectedSet.status === 'DOUBLE_DQ' ||
+                  selectedSet.isDq ||
+                  selectedSet.player1CheckedIn ||
+                  selectedSet.player2CheckedIn) && (
+                  <button
+                    type="button"
+                    onClick={() => onAdminCheckInAction(selectedSet.setID, 'REVERT_DQ')}
+                    className="px-2.5 py-1 rounded-md bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200 font-mono text-[11px] flex items-center gap-1 cursor-pointer"
+                    title="Anular DQ / Double DQ y reiniciar ventana de Check-In por reclamo válido"
+                  >
+                    < ShieldAlert className="w-3 h-3 text-amber-300" />
+                    Anular DQ / Reiniciar
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Controles Táctiles de Marcador (<SingleScreenScoreReporter />) + IDs de Consola y MAIN */}
       <div className="grid grid-cols-2 gap-3">
         <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex flex-col justify-between">
           <div>

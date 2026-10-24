@@ -19,10 +19,37 @@ export type MatchState =
   | 'LOCKED'
   | 'WAITING'
   | 'READY'
+  | 'WAITING_CHECKIN'
+  | 'PARTIAL_CHECKIN'
   | 'IN_PROGRESS'
+  | 'REPORTED_PARTIAL'
   | 'DISPUTED'
   | 'COMPLETED'
+  | 'SINGLE_DQ'
+  | 'DOUBLE_DQ'
   | 'ARCHIVED';
+
+export type SetStatus = MatchState;
+
+export type DoubleDqRule =
+  | 'AUTO_BYE_NEXT_ROUND'
+  | 'RANDOM_COIN_FLIP'
+  | 'PAUSE_FOR_ADMIN';
+
+export type LosersBracketDqPenalty =
+  | 'DROP_TO_LOSERS'
+  | 'ELIMINATE_FROM_EVENT';
+
+export type DqReason =
+  | 'PLAYER1_TIMEOUT'
+  | 'PLAYER2_TIMEOUT'
+  | 'DOUBLE_TIMEOUT'
+  | null;
+
+export function isSetCompletedOrDq(status: MatchState): boolean {
+  return status === 'COMPLETED' || status === 'SINGLE_DQ' || status === 'DOUBLE_DQ';
+}
+
 
 export type BracketPhase =
   | 'SWISS'
@@ -256,6 +283,14 @@ export interface OBFSet {
   entrant2Score: number;
   entrant1Forfeit?: boolean;
   entrant2Forfeit?: boolean;
+  player1CheckedIn?: boolean;
+  player2CheckedIn?: boolean;
+  checkInStartedAt?: string | null;
+  checkInDeadlineAt?: string | null;
+  checkInPaused?: boolean;
+  checkInPausedRemainingMs?: number | null;
+  isDq?: boolean;
+  dqReason?: DqReason;
   status: MatchState;
   winnerID: string | null;
   loserID: string | null;
@@ -274,7 +309,38 @@ export interface OBFSet {
     disputeReason?: string;
     ffaEntrantIDs?: string[];
     ffaScores?: Record<string, number>;
+    vacantSlot1FromDoubleDq?: boolean;
+    vacantSlot2FromDoubleDq?: boolean;
   };
+}
+
+export type GoogleMeetAccessType = 'OPEN' | 'TRUSTED' | 'RESTRICTED';
+
+export interface TournamentGoogleMeetSession {
+  spaceName: string; // e.g. "spaces/abc123xyz"
+  meetingUri: string; // e.g. "https://meet.google.com/xxx-yyyy-zzz"
+  meetingCode: string; // e.g. "xxx-yyyy-zzz"
+  accessType: GoogleMeetAccessType;
+  topic?: string;
+  createdByEmail?: string;
+  createdByName?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export type ChatBracketDisplayMode = 'TEXT' | '2D' | 'BOTH';
+
+export interface TournamentChatMessage {
+  id: string;
+  senderName: string;
+  senderTag?: string;
+  senderRole: UserRole | 'SYSTEM_BOT';
+  text: string;
+  messageType: 'BRACKET_ANNOUNCEMENT' | 'USER_MESSAGE' | 'MEET_EVENT';
+  bracketDisplayMode?: ChatBracketDisplayMode;
+  meetingUri?: string;
+  meetingCode?: string;
+  createdAt: string;
 }
 
 export interface OBFEventMetadata {
@@ -292,6 +358,119 @@ export interface OBFEventMetadata {
   venueFee: number;
   entryFee: number;
   prizePool: number;
+  // --- Reglas Graduables de Match Check-In y Descalificación Automática (DQ / Double DQ) ---
+  enableMatchCheckIn?: boolean;
+  matchCheckInTimeoutMinutes?: number; // Graduable de 2 a 30 minutos (por defecto: 5)
+  enableAutoDq?: boolean;
+  doubleDqRule?: DoubleDqRule;
+  losersBracketDqPenalty?: LosersBracketDqPenalty;
+  googleMeet?: TournamentGoogleMeetSession | null;
+  chatMessages?: TournamentChatMessage[];
+}
+
+export function formatTournamentBracketText(obfDoc: OBFDocument): string {
+  const entrantMap = new Map<string, OBFEntrant>();
+  for (const e of obfDoc.entrants) {
+    entrantMap.set(e.entrantID, e);
+  }
+
+  const resolvePlayerLabel = (
+    entrantID: string | null,
+    slotIndex: 1 | 2,
+    set: OBFSet
+  ): string => {
+    if (entrantID) {
+      const ent = entrantMap.get(entrantID);
+      if (ent) {
+        const charPart = ent.mainCharacter ? ` [${ent.mainCharacter}]` : '';
+        const platPart = ent.platform ? ` (${ent.platform})` : '';
+        return `#${ent.initialSeed} ${ent.entrantTag}${charPart}${platPart}`;
+      }
+      return entrantID;
+    }
+    // Buscar de qué set previo proviene si está en espera
+    const incomingWin = obfDoc.sets.find(
+      (s) => s.nextWinSetID === set.setID && (s.nextWinSlot === slotIndex || !s.nextWinSlot)
+    );
+    if (incomingWin) {
+      return `Ganador de [${incomingWin.setID}]`;
+    }
+    const incomingLose = obfDoc.sets.find(
+      (s) => s.nextLoseSetID === set.setID && (s.nextLoseSlot === slotIndex || !s.nextLoseSlot)
+    );
+    if (incomingLose) {
+      return `Perdedor de [${incomingLose.setID}]`;
+    }
+    return 'Por definir (TBD)';
+  };
+
+  const lines: string[] = [];
+  lines.push(`🏆 BRACKETS OFICIALES — ${obfDoc.event.name.toUpperCase()}`);
+  lines.push(
+    `🎮 Juego: ${obfDoc.event.gameName} | 👥 Inscritos: ${obfDoc.entrants.length} | 📋 Sets Totales: ${obfDoc.sets.length}`
+  );
+  if (obfDoc.event.googleMeet?.meetingUri) {
+    lines.push(
+      `📹 Sala Google Meet: ${obfDoc.event.googleMeet.meetingUri} (Código: ${obfDoc.event.googleMeet.meetingCode})`
+    );
+  }
+  lines.push(`══════════════════════════════════════════════════════`);
+
+  // Agrupar por roundLabel preservando el orden natural de aparición
+  const groupedByRound = new Map<string, OBFSet[]>();
+  for (const s of obfDoc.sets) {
+    const key = `${s.phase} · ${s.roundLabel}`;
+    const list = groupedByRound.get(key) || [];
+    list.push(s);
+    groupedByRound.set(key, list);
+  }
+
+  for (const [roundHeader, roundSets] of groupedByRound.entries()) {
+    lines.push(`\n▸ ${roundHeader.toUpperCase()}`);
+    for (const s of roundSets) {
+      const p1 = resolvePlayerLabel(s.entrant1ID, 1, s);
+      const p2 = resolvePlayerLabel(s.entrant2ID, 2, s);
+      const scoreStr =
+        s.status === 'COMPLETED' || s.status === 'IN_PROGRESS'
+          ? ` (${s.entrant1Score} - ${s.entrant2Score})`
+          : '';
+      const stationStr = s.other?.station ? ` · 📍 ${s.other.station}` : '';
+      const statusBadge =
+        s.status === 'COMPLETED'
+          ? '✅ FINALIZADO'
+          : s.status === 'IN_PROGRESS'
+            ? '🔴 EN JUEGO'
+            : s.status === 'READY'
+              ? '⚡ LISTO PARA JUGAR'
+              : '⏳ EN ESPERA';
+      lines.push(
+        `  • [${s.setID}] ${p1}  VS  ${p2}${scoreStr} (Bo${s.bestOf}${stationStr}) — ${statusBadge}`
+      );
+    }
+  }
+
+  return lines.join('\n');
+}
+
+export function createInitialBracketChatMessage(
+  obfDoc: OBFDocument,
+  triggerReason?: string
+): TournamentChatMessage {
+  const headerNote =
+    triggerReason ||
+    `¡Sala y Torneo iniciados! Aquí están todos los enfrentamientos del bracket (quién contra quién le toca) en Texto y Vista 2D:`;
+  return {
+    id: `msg-bracket-init-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    senderName: 'Bot Oficial de Brackets',
+    senderTag: 'SYSTEM',
+    senderRole: 'SYSTEM_BOT',
+    text: `${headerNote}\n\n${formatTournamentBracketText(obfDoc)}`,
+    messageType: 'BRACKET_ANNOUNCEMENT',
+    bracketDisplayMode: 'BOTH',
+    meetingUri: obfDoc.event.googleMeet?.meetingUri,
+    meetingCode: obfDoc.event.googleMeet?.meetingCode,
+    createdAt: new Date().toISOString(),
+  };
 }
 
 export interface OBFDocument {
@@ -1687,6 +1866,30 @@ export class OptimizedNikBracketEngine {
   constructor(initialDoc: OBFDocument) {
     this.doc = initialDoc;
     this.rebuildIndices();
+    if (!this.doc.event.chatMessages || this.doc.event.chatMessages.length === 0) {
+      this.doc.event.chatMessages = [createInitialBracketChatMessage(this.doc)];
+    }
+  }
+
+  public syncInitialBracketChatMessage(customNotice?: string): void {
+    const bracketMsg = createInitialBracketChatMessage(this.doc, customNotice);
+    if (!this.doc.event.chatMessages || this.doc.event.chatMessages.length === 0) {
+      this.doc.event.chatMessages = [bracketMsg];
+      return;
+    }
+    const existingIdx = this.doc.event.chatMessages.findIndex(
+      (m) => m.messageType === 'BRACKET_ANNOUNCEMENT'
+    );
+    if (existingIdx >= 0) {
+      this.doc.event.chatMessages[existingIdx] = {
+        ...this.doc.event.chatMessages[existingIdx],
+        text: bracketMsg.text,
+        meetingUri: bracketMsg.meetingUri,
+        meetingCode: bracketMsg.meetingCode,
+      };
+    } else {
+      this.doc.event.chatMessages.unshift(bracketMsg);
+    }
   }
 
   public rebuildIndices(): void {
@@ -1699,8 +1902,45 @@ export class OptimizedNikBracketEngine {
       this.entrantSetsIndex.set(entrant.entrantID, new Set());
     }
 
+    if (this.doc.event.enableMatchCheckIn === undefined) {
+      this.doc.event.enableMatchCheckIn = true;
+    }
+    if (!this.doc.event.matchCheckInTimeoutMinutes) {
+      this.doc.event.matchCheckInTimeoutMinutes = 5;
+    }
+    if (this.doc.event.enableAutoDq === undefined) {
+      this.doc.event.enableAutoDq = true;
+    }
+    if (!this.doc.event.doubleDqRule) {
+      this.doc.event.doubleDqRule = 'AUTO_BYE_NEXT_ROUND';
+    }
+    if (!this.doc.event.losersBracketDqPenalty) {
+      this.doc.event.losersBracketDqPenalty = 'DROP_TO_LOSERS';
+    }
+
+    const timeoutMs =
+      Math.min(30, Math.max(2, this.doc.event.matchCheckInTimeoutMinutes || 5)) * 60 * 1000;
+
     for (const set of this.doc.sets) {
       this.setIndex.set(set.setID, set);
+      if (set.entrant1ID && set.entrant2ID) {
+        if (set.status === 'IN_PROGRESS' || set.status === 'COMPLETED') {
+          if (set.player1CheckedIn === undefined) set.player1CheckedIn = true;
+          if (set.player2CheckedIn === undefined) set.player2CheckedIn = true;
+        } else if (
+          set.status === 'READY' ||
+          set.status === 'WAITING_CHECKIN' ||
+          set.status === 'PARTIAL_CHECKIN'
+        ) {
+          if (set.player1CheckedIn === undefined) set.player1CheckedIn = false;
+          if (set.player2CheckedIn === undefined) set.player2CheckedIn = false;
+          if (this.doc.event.enableMatchCheckIn && !set.checkInDeadlineAt) {
+            const now = Date.now();
+            set.checkInStartedAt = new Date(now).toISOString();
+            set.checkInDeadlineAt = new Date(now + timeoutMs).toISOString();
+          }
+        }
+      }
       if (set.entrant1ID) {
         if (!this.entrantSetsIndex.has(set.entrant1ID)) {
           this.entrantSetsIndex.set(set.entrant1ID, new Set());
@@ -1718,6 +1958,9 @@ export class OptimizedNikBracketEngine {
   }
 
   public getDocument(): OBFDocument {
+    if (!this.doc.event.chatMessages || this.doc.event.chatMessages.length === 0) {
+      this.doc.event.chatMessages = [createInitialBracketChatMessage(this.doc)];
+    }
     return this.doc;
   }
 
@@ -1859,7 +2102,23 @@ export class OptimizedNikBracketEngine {
           nextW.entrant2ID = set.winnerID;
         }
         this.linkEntrantToSet(set.winnerID, nextW.setID);
-        nextW.status = nextW.entrant1ID && nextW.entrant2ID ? 'READY' : 'WAITING';
+        if (
+          (nextW.other.vacantSlot1FromDoubleDq || nextW.other.vacantSlot2FromDoubleDq) &&
+          (nextW.entrant1ID || nextW.entrant2ID)
+        ) {
+          const activeEntrant = nextW.entrant1ID || nextW.entrant2ID!;
+          const nextWinScore = Math.ceil(nextW.bestOf / 2);
+          nextW.entrant1Score = nextW.entrant1ID === activeEntrant ? nextWinScore : 0;
+          nextW.entrant2Score = nextW.entrant2ID === activeEntrant ? nextWinScore : 0;
+          nextW.winnerID = activeEntrant;
+          nextW.loserID = null;
+          nextW.status = 'COMPLETED';
+          this.propagateAdvancement(nextW);
+        } else if (nextW.entrant1ID && nextW.entrant2ID) {
+          this.initMatchCheckInWindow(nextW);
+        } else {
+          nextW.status = 'WAITING';
+        }
       }
     }
 
@@ -1876,7 +2135,11 @@ export class OptimizedNikBracketEngine {
           nextL.entrant2ID = set.loserID;
         }
         this.linkEntrantToSet(set.loserID, nextL.setID);
-        nextL.status = nextL.entrant1ID && nextL.entrant2ID ? 'READY' : 'WAITING';
+        if (nextL.entrant1ID && nextL.entrant2ID) {
+          this.initMatchCheckInWindow(nextL);
+        } else {
+          nextL.status = 'WAITING';
+        }
       }
     }
   }
@@ -1956,9 +2219,9 @@ export class OptimizedNikBracketEngine {
       opponentsMap.set(e.entrantID, []);
     }
 
-    // 1 sola pasada O(S) sobre los sets completados
+    // 1 sola pasada O(S) sobre los sets completados o definidos por Walkover (SINGLE_DQ)
     for (const s of this.doc.sets) {
-      if (s.status === 'COMPLETED' && s.entrant1ID && s.entrant2ID) {
+      if ((s.status === 'COMPLETED' || s.status === 'SINGLE_DQ') && s.entrant1ID && s.entrant2ID) {
         const r1 = map.get(s.entrant1ID);
         const r2 = map.get(s.entrant2ID);
         if (r1 && r2) {
@@ -2026,6 +2289,7 @@ export class OptimizedNikBracketEngine {
     this.doc.event.format = format;
     this.doc.sets = generateSetsByFormat(format, this.doc.entrants);
     this.rebuildIndices();
+    this.syncInitialBracketChatMessage();
     return this.doc;
   }
 
@@ -2034,6 +2298,7 @@ export class OptimizedNikBracketEngine {
     this.doc.event.numberEntrants = this.doc.entrants.length;
     this.doc.sets = generateSetsByFormat(this.doc.event.format, this.doc.entrants);
     this.rebuildIndices();
+    this.syncInitialBracketChatMessage();
     return this.doc;
   }
 
@@ -2045,6 +2310,7 @@ export class OptimizedNikBracketEngine {
     this.doc.event.numberEntrants = this.doc.entrants.length;
     this.doc.sets = generateSetsByFormat(this.doc.event.format, this.doc.entrants);
     this.rebuildIndices();
+    this.syncInitialBracketChatMessage();
     return this.doc;
   }
 
@@ -2055,7 +2321,390 @@ export class OptimizedNikBracketEngine {
     });
     this.doc.sets = generateSetsByFormat(this.doc.event.format, this.doc.entrants);
     this.rebuildIndices();
+    this.syncInitialBracketChatMessage();
     return this.doc;
+  }
+
+  /**
+   * Inicializa o reinicia la ventana de Check-In para un Set con ambos rivales definidos
+   */
+  public initMatchCheckInWindow(set: OBFSet, customTimeoutMinutes?: number): void {
+    const timeoutMinutes = Math.min(
+      30,
+      Math.max(2, customTimeoutMinutes ?? this.doc.event.matchCheckInTimeoutMinutes ?? 5)
+    );
+    const now = Date.now();
+    set.player1CheckedIn = false;
+    set.player2CheckedIn = false;
+    set.checkInPaused = false;
+    set.checkInPausedRemainingMs = null;
+    set.isDq = false;
+    set.dqReason = null;
+    set.entrant1Forfeit = false;
+    set.entrant2Forfeit = false;
+    set.checkInStartedAt = new Date(now).toISOString();
+    set.checkInDeadlineAt = new Date(now + timeoutMinutes * 60 * 1000).toISOString();
+    if (this.doc.event.enableMatchCheckIn !== false) {
+      set.status = 'WAITING_CHECKIN';
+    } else {
+      set.status = 'READY';
+    }
+    set.updatedAt = new Date(now).toISOString();
+  }
+
+  /**
+   * Registra el Check-In de un jugador (Slot 1, Slot 2 o AMBOS) en un Set específico.
+   * Implementa el Escenario 1 (OK):
+   * - Primer jugador confirma -> PARTIAL_CHECKIN (inicia/mantiene Timer)
+   * - Segundo jugador confirma a tiempo -> IN_PROGRESS (desbloquea <SingleScreenScoreReporter />)
+   */
+  public performMatchCheckIn(
+    setID: string,
+    slot: 1 | 2 | 'BOTH'
+  ): {
+    set: OBFSet | null;
+    transitionedToInProgress: boolean;
+    startedTimer: boolean;
+  } {
+    const set = this.setIndex.get(setID);
+    if (!set || !set.entrant1ID || !set.entrant2ID) {
+      return { set: null, transitionedToInProgress: false, startedTimer: false };
+    }
+
+    const now = Date.now();
+    const timeoutMinutes = Math.min(
+      30,
+      Math.max(2, this.doc.event.matchCheckInTimeoutMinutes || 5)
+    );
+    let startedTimer = false;
+
+    if (!set.checkInDeadlineAt || !set.checkInStartedAt) {
+      set.checkInStartedAt = new Date(now).toISOString();
+      set.checkInDeadlineAt = new Date(now + timeoutMinutes * 60 * 1000).toISOString();
+      startedTimer = true;
+    }
+
+    if (slot === 1 || slot === 'BOTH') {
+      set.player1CheckedIn = true;
+    }
+    if (slot === 2 || slot === 'BOTH') {
+      set.player2CheckedIn = true;
+    }
+
+    set.isDq = false;
+    set.dqReason = null;
+    set.entrant1Forfeit = false;
+    set.entrant2Forfeit = false;
+    set.updatedAt = new Date(now).toISOString();
+
+    if (set.player1CheckedIn && set.player2CheckedIn) {
+      // Escenario 1 (OK): Ambos hicieron Check-in a tiempo -> Pasa a IN_PROGRESS
+      set.status = 'IN_PROGRESS';
+      set.checkInPaused = false;
+      set.checkInPausedRemainingMs = null;
+      return { set, transitionedToInProgress: true, startedTimer };
+    }
+
+    // Uno solo ha hecho check-in -> Pasa a PARTIAL_CHECKIN y el reloj sigue corriendo
+    set.status = 'PARTIAL_CHECKIN';
+    return { set, transitionedToInProgress: false, startedTimer };
+  }
+
+  /**
+   * Propaga una vacante por Double DQ al siguiente nodo del cuadro (AUTO_BYE_NEXT_ROUND).
+   * Si el rival en el siguiente nodo ya está esperando, recibe victoria automática por BYE (2-0)
+   * y avanza inmediatamente para que el torneo jamás se congele.
+   */
+  public handleDoubleDqNextRound(set: OBFSet): void {
+    if (!set.nextWinSetID) return;
+    const nextW = this.setIndex.get(set.nextWinSetID);
+    if (!nextW) return;
+
+    const targetSlot = set.nextWinSlot === 2 ? 2 : 1;
+    if (targetSlot === 1) {
+      nextW.other.vacantSlot1FromDoubleDq = true;
+    } else {
+      nextW.other.vacantSlot2FromDoubleDq = true;
+    }
+
+    // Si el otro jugador ya está en nextW, le otorgamos avance automático por BYE (2-0)
+    const waitingOpponentID = targetSlot === 1 ? nextW.entrant2ID : nextW.entrant1ID;
+    if (waitingOpponentID) {
+      const winScore = Math.ceil(nextW.bestOf / 2);
+      nextW.entrant1Score = targetSlot === 1 ? 0 : winScore;
+      nextW.entrant2Score = targetSlot === 1 ? winScore : 0;
+      nextW.winnerID = waitingOpponentID;
+      nextW.loserID = null;
+      nextW.status = 'COMPLETED';
+      nextW.updatedAt = new Date().toISOString();
+      this.propagateAdvancement(nextW);
+    }
+  }
+
+  /**
+   * Evalúa qué ocurre al expirar el tiempo límite de Check-In (Worker BullMQ o Trigger Arbitral):
+   * - Escenario 1 (OK): Ambos hicieron check-in -> IN_PROGRESS
+   * - Escenario 2 (SINGLE_DQ): Uno hizo check-in y el otro NO -> Walkover (2 - 0) y avance automático
+   * - Escenario 3 (DOUBLE_DQ): Ninguno hizo check-in -> Resuelto según doubleDqRule
+   */
+  public evaluateMatchCheckInTimeout(setID: string): {
+    set: OBFSet | null;
+    outcome:
+      | 'ALREADY_ACTIVE'
+      | 'PAUSED'
+      | 'SCENARIO_1_OK'
+      | 'SCENARIO_2_SINGLE_DQ'
+      | 'SCENARIO_3_DOUBLE_DQ';
+    winnerID: string | null;
+    loserID: string | null;
+    doubleDqAction?: DoubleDqRule;
+  } {
+    const set = this.setIndex.get(setID);
+    if (!set || !set.entrant1ID || !set.entrant2ID) {
+      return { set: null, outcome: 'ALREADY_ACTIVE', winnerID: null, loserID: null };
+    }
+
+    if (
+      set.status === 'IN_PROGRESS' ||
+      set.status === 'COMPLETED' ||
+      set.status === 'SINGLE_DQ' ||
+      set.status === 'DOUBLE_DQ'
+    ) {
+      return {
+        set,
+        outcome: 'ALREADY_ACTIVE',
+        winnerID: set.winnerID,
+        loserID: set.loserID,
+      };
+    }
+
+    if (set.checkInPaused) {
+      return {
+        set,
+        outcome: 'PAUSED',
+        winnerID: null,
+        loserID: null,
+      };
+    }
+
+    const p1In = Boolean(set.player1CheckedIn);
+    const p2In = Boolean(set.player2CheckedIn);
+
+    // ESCENARIO 1: Ambos hicieron Check-in
+    if (p1In && p2In) {
+      set.status = 'IN_PROGRESS';
+      set.isDq = false;
+      set.dqReason = null;
+      set.updatedAt = new Date().toISOString();
+      return {
+        set,
+        outcome: 'SCENARIO_1_OK',
+        winnerID: null,
+        loserID: null,
+      };
+    }
+
+    // ESCENARIO 2: SINGLE DQ (Uno hizo Check-in y el otro NO)
+    if (p1In !== p2In) {
+      const winScore = Math.ceil(set.bestOf / 2); // Ej: 2 en Bo3, 3 en Bo5
+      const p1WinsWalkover = p1In && !p2In;
+      const winnerID = p1WinsWalkover ? set.entrant1ID : set.entrant2ID;
+      const loserID = p1WinsWalkover ? set.entrant2ID : set.entrant1ID;
+
+      set.entrant1Score = p1WinsWalkover ? winScore : 0;
+      set.entrant2Score = p1WinsWalkover ? 0 : winScore;
+      set.entrant1Forfeit = !p1WinsWalkover;
+      set.entrant2Forfeit = p1WinsWalkover;
+      set.winnerID = winnerID;
+      set.loserID = loserID;
+      set.isDq = true;
+      set.dqReason = p1WinsWalkover ? 'PLAYER2_TIMEOUT' : 'PLAYER1_TIMEOUT';
+      set.status = 'SINGLE_DQ';
+      set.updatedAt = new Date().toISOString();
+
+      // Penalización en Doble Eliminación (Winners Bracket):
+      // Si losersBracketDqPenalty === 'ELIMINATE_FROM_EVENT', el jugador descalificado NO cae a Losers
+      const eliminateFromEvent =
+        this.doc.event.losersBracketDqPenalty === 'ELIMINATE_FROM_EVENT';
+      if (eliminateFromEvent && set.nextLoseSetID) {
+        const savedLoseId = set.nextLoseSetID;
+        set.nextLoseSetID = null;
+        this.propagateAdvancement(set);
+        set.nextLoseSetID = savedLoseId;
+      } else {
+        this.propagateAdvancement(set);
+      }
+
+      // Verificar si el nodo siguiente tenía una vacante por Double DQ previo para auto-avanzar por BYE
+      if (set.nextWinSetID) {
+        const nextW = this.setIndex.get(set.nextWinSetID);
+        if (
+          nextW &&
+          (nextW.other.vacantSlot1FromDoubleDq || nextW.other.vacantSlot2FromDoubleDq) &&
+          (nextW.entrant1ID || nextW.entrant2ID)
+        ) {
+          const activeEntrant = nextW.entrant1ID || nextW.entrant2ID!;
+          const nextWinScore = Math.ceil(nextW.bestOf / 2);
+          nextW.entrant1Score = nextW.entrant1ID === activeEntrant ? nextWinScore : 0;
+          nextW.entrant2Score = nextW.entrant2ID === activeEntrant ? nextWinScore : 0;
+          nextW.winnerID = activeEntrant;
+          nextW.status = 'COMPLETED';
+          this.propagateAdvancement(nextW);
+        }
+      }
+
+      this.standingsDirty = true;
+      return {
+        set,
+        outcome: 'SCENARIO_2_SINGLE_DQ',
+        winnerID,
+        loserID,
+      };
+    }
+
+    // ESCENARIO 3: DOUBLE DQ (Ninguno de los dos jugadores hizo Check-in)
+    const rule: DoubleDqRule = this.doc.event.doubleDqRule || 'AUTO_BYE_NEXT_ROUND';
+
+    if (rule === 'RANDOM_COIN_FLIP') {
+      // Avanza uno al azar (Coin Flip) para no dejar huecos vacíos en llaves rígidas
+      const p1Picked = Math.random() < 0.5;
+      const winScore = Math.ceil(set.bestOf / 2);
+      const winnerID = p1Picked ? set.entrant1ID : set.entrant2ID;
+      const loserID = p1Picked ? set.entrant2ID : set.entrant1ID;
+
+      set.entrant1Score = p1Picked ? winScore : 0;
+      set.entrant2Score = p1Picked ? 0 : winScore;
+      set.entrant1Forfeit = !p1Picked;
+      set.entrant2Forfeit = p1Picked;
+      set.winnerID = winnerID;
+      set.loserID = loserID;
+      set.isDq = true;
+      set.dqReason = 'DOUBLE_TIMEOUT';
+      set.status = 'SINGLE_DQ';
+      set.updatedAt = new Date().toISOString();
+      this.propagateAdvancement(set);
+      this.standingsDirty = true;
+
+      return {
+        set,
+        outcome: 'SCENARIO_3_DOUBLE_DQ',
+        winnerID,
+        loserID,
+        doubleDqAction: rule,
+      };
+    }
+
+    // Tanto en AUTO_BYE_NEXT_ROUND como en PAUSE_FOR_ADMIN ambos quedan en DOUBLE_DQ
+    set.entrant1Score = 0;
+    set.entrant2Score = 0;
+    set.entrant1Forfeit = true;
+    set.entrant2Forfeit = true;
+    set.winnerID = null;
+    set.loserID = null;
+    set.isDq = true;
+    set.dqReason = 'DOUBLE_TIMEOUT';
+    set.status = 'DOUBLE_DQ';
+    set.updatedAt = new Date().toISOString();
+
+    if (rule === 'PAUSE_FOR_ADMIN') {
+      set.checkInPaused = true;
+      set.other.disputeReason =
+        'DOUBLE_DQ: Ambos jugadores excedieron el tiempo límite de Check-In. Esperando decisión del Árbitro/Admin.';
+    } else {
+      // AUTO_BYE_NEXT_ROUND (Recomendado): El próximo rival en el cuadro recibe victoria automática por BYE
+      this.handleDoubleDqNextRound(set);
+    }
+
+    this.standingsDirty = true;
+    return {
+      set,
+      outcome: 'SCENARIO_3_DOUBLE_DQ',
+      winnerID: null,
+      loserID: null,
+      doubleDqAction: rule,
+    };
+  }
+
+  /**
+   * Controles Manuales para el Árbitro / Administrador sobre el Check-In y Timer del Set
+   */
+  public adminControlMatchCheckIn(
+    setID: string,
+    action:
+      | 'FORCE_P1'
+      | 'FORCE_P2'
+      | 'FORCE_BOTH'
+      | 'PAUSE_TIMER'
+      | 'RESUME_TIMER'
+      | 'RESET_CHECKIN'
+      | 'REVERT_DQ'
+      | 'TRIGGER_TIMEOUT_NOW'
+  ): OBFSet | null {
+    const set = this.setIndex.get(setID);
+    if (!set) return null;
+
+    const now = Date.now();
+    const timeoutMinutes = Math.min(
+      30,
+      Math.max(2, this.doc.event.matchCheckInTimeoutMinutes || 5)
+    );
+
+    if (action === 'FORCE_P1') {
+      this.performMatchCheckIn(setID, 1);
+      return set;
+    }
+    if (action === 'FORCE_P2') {
+      this.performMatchCheckIn(setID, 2);
+      return set;
+    }
+    if (action === 'FORCE_BOTH') {
+      this.performMatchCheckIn(setID, 'BOTH');
+      return set;
+    }
+    if (action === 'PAUSE_TIMER') {
+      if (!set.checkInPaused) {
+        const deadlineMs = set.checkInDeadlineAt
+          ? new Date(set.checkInDeadlineAt).getTime()
+          : now + timeoutMinutes * 60 * 1000;
+        set.checkInPausedRemainingMs = Math.max(15000, deadlineMs - now);
+        set.checkInPaused = true;
+        set.updatedAt = new Date(now).toISOString();
+      }
+      return set;
+    }
+    if (action === 'RESUME_TIMER') {
+      if (set.checkInPaused) {
+        const remaining =
+          set.checkInPausedRemainingMs || timeoutMinutes * 60 * 1000;
+        set.checkInDeadlineAt = new Date(now + remaining).toISOString();
+        set.checkInPaused = false;
+        set.checkInPausedRemainingMs = null;
+        set.updatedAt = new Date(now).toISOString();
+      }
+      return set;
+    }
+    if (action === 'RESET_CHECKIN' || action === 'REVERT_DQ') {
+      if (set.status === 'SINGLE_DQ' || set.status === 'DOUBLE_DQ' || set.status === 'COMPLETED') {
+        this.resetMatchCascade(setID);
+      }
+      if (set.nextWinSetID) {
+        const nextW = this.setIndex.get(set.nextWinSetID);
+        if (nextW) {
+          nextW.other.vacantSlot1FromDoubleDq = false;
+          nextW.other.vacantSlot2FromDoubleDq = false;
+        }
+      }
+      set.other.disputeReason = undefined;
+      this.initMatchCheckInWindow(set, timeoutMinutes);
+      return set;
+    }
+    if (action === 'TRIGGER_TIMEOUT_NOW') {
+      set.checkInPaused = false;
+      this.evaluateMatchCheckInTimeout(setID);
+      return set;
+    }
+
+    return set;
   }
 }
 

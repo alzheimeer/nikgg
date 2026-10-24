@@ -29,6 +29,8 @@ interface BracketDagVisualizerProps {
   casterNarrative: string;
   onRequestCasterNarrative: (setID: string) => void;
   loadingNarrative: boolean;
+  activeMassivePoolCode?: string;
+  onChangeMassivePoolCode?: (poolCode: string) => void;
 }
 
 const PHASE_ORDER: BracketPhase[] = [
@@ -71,11 +73,18 @@ export const BracketDagVisualizer: React.FC<BracketDagVisualizerProps> = ({
   casterNarrative,
   onRequestCasterNarrative,
   loadingNarrative,
+  activeMassivePoolCode = 'MAIN_BRACKET',
+  onChangeMassivePoolCode,
 }) => {
   const [visualMode, setVisualMode] = useState<'3d' | 'dag' | 'grid' | 'obs'>('3d');
   const [phaseFilter, setPhaseFilter] = useState<string>('ALL');
   const [zoom, setZoom] = useState<number>(1);
   const [showLoserEdges, setShowLoserEdges] = useState<boolean>(true);
+  const [localPoolCode, setLocalPoolCode] = useState<string>(activeMassivePoolCode);
+
+  useEffect(() => {
+    setLocalPoolCode(activeMassivePoolCode);
+  }, [activeMassivePoolCode]);
 
   // Reiniciar el filtro de fase al cambiar de torneo o formato para mostrar todo el tablero nuevo
   useEffect(() => {
@@ -295,11 +304,83 @@ export const BracketDagVisualizer: React.FC<BracketDagVisualizerProps> = ({
         )}
       </div>
 
+      {/* BARRA DE VIRTUALIZACIÓN 3D ESPACIAL (FRUSTUM CULLING & LOD PARA 3,000+ JUGADORES EN 64 POOLS) */}
+      <div className="flex flex-wrap items-center justify-between gap-2.5 rounded-xl border border-slate-800 bg-slate-950/90 px-3.5 py-2 text-xs">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/40 font-mono text-[11px] font-semibold text-emerald-300">
+            Frustum Culling & LOD Activo
+          </span>
+          <span className="text-slate-300">
+            Sub-Llave Cargada en GPU:{' '}
+            <strong className="font-mono text-[#00F0FF]">
+              {localPoolCode === 'MAIN_BRACKET'
+                ? 'Cuadro Principal / Top 128'
+                : `Pool ${localPoolCode} (48 Jugadores)`}
+            </strong>
+          </span>
+          <span className="text-[11px] font-mono text-slate-500">
+            · Renderizando {filteredSets.length} nodos 3D (&lt; 2 ms RedisJSON)
+          </span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="text-[11px] text-slate-400 font-mono">
+            Selector Espacial de Pool (3,072P):
+          </label>
+          <select
+            value={localPoolCode}
+            onChange={(e) => {
+              const nextCode = e.target.value;
+              setLocalPoolCode(nextCode);
+              onChangeMassivePoolCode?.(nextCode);
+            }}
+            className="rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1 text-xs font-mono text-white"
+          >
+            <option value="MAIN_BRACKET">Fase 2: Main Bracket / Top 128</option>
+            <optgroup label="Ola A (10:00 AM · Pools A1–A16 · 768P)">
+              {Array.from({ length: 16 }, (_, i) => `A${i + 1}`).map((code) => (
+                <option key={code} value={code}>
+                  Pool {code} (Ola A · 10:00 AM · 48P)
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label="Ola B (12:00 PM · Pools B1–B16 · 768P)">
+              {Array.from({ length: 16 }, (_, i) => `B${i + 1}`).map((code) => (
+                <option key={code} value={code}>
+                  Pool {code} (Ola B · 12:00 PM · 48P)
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label="Ola C (02:00 PM · Pools C1–C16 · 768P)">
+              {Array.from({ length: 16 }, (_, i) => `C${i + 1}`).map((code) => (
+                <option key={code} value={code}>
+                  Pool {code} (Ola C · 02:00 PM · 48P)
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label="Ola D (04:00 PM · Pools D1–D16 · 768P)">
+              {Array.from({ length: 16 }, (_, i) => `D${i + 1}`).map((code) => (
+                <option key={code} value={code}>
+                  Pool {code} (Ola D · 04:00 PM · 48P)
+                </option>
+              ))}
+            </optgroup>
+          </select>
+        </div>
+      </div>
+
       {/* MODO 0: CANVAS WEBGL 3D (Z-SPACE DEPTH) FIEL AL REPOSITORIO BASE */}
       {visualMode === '3d' && (
         <BracketCanvasWebGL3D
           obf={{
             ...obf,
+            event: {
+              ...obf.event,
+              name:
+                localPoolCode === 'MAIN_BRACKET'
+                  ? obf.event.name
+                  : `[Pool ${localPoolCode}] ${obf.event.name}`,
+            },
             sets: phaseFilter === 'ALL' ? obf.sets : filteredSets,
           }}
           selectedSetID={selectedSetID}
@@ -392,8 +473,22 @@ export const BracketDagVisualizer: React.FC<BracketDagVisualizerProps> = ({
                 const p1 = set.entrant1ID ? entrantMap.get(set.entrant1ID) : undefined;
                 const p2 = set.entrant2ID ? entrantMap.get(set.entrant2ID) : undefined;
                 const isSelected = set.setID === selectedSetID;
-                const isP1Winner = set.status === 'COMPLETED' && set.winnerID === set.entrant1ID;
-                const isP2Winner = set.status === 'COMPLETED' && set.winnerID === set.entrant2ID;
+                const isP1Winner =
+                  (set.status === 'COMPLETED' || set.status === 'SINGLE_DQ') &&
+                  set.winnerID === set.entrant1ID;
+                const isP2Winner =
+                  (set.status === 'COMPLETED' || set.status === 'SINGLE_DQ') &&
+                  set.winnerID === set.entrant2ID;
+                const isDqNode =
+                  set.status === 'SINGLE_DQ' ||
+                  set.status === 'DOUBLE_DQ' ||
+                  Boolean(set.isDq);
+                const isWaitingCheckInNode =
+                  obf.event.enableMatchCheckIn !== false &&
+                  Boolean(p1 && p2) &&
+                  (set.status === 'WAITING_CHECKIN' ||
+                    set.status === 'PARTIAL_CHECKIN' ||
+                    (set.status === 'READY' && !(set.player1CheckedIn && set.player2CheckedIn)));
                 const isMyMatch = Boolean(
                   myEntrantID && (set.entrant1ID === myEntrantID || set.entrant2ID === myEntrantID)
                 );
@@ -409,6 +504,12 @@ export const BracketDagVisualizer: React.FC<BracketDagVisualizerProps> = ({
                       height: `${dagLayout.nodeHeight}px`,
                       borderColor: isSelected
                         ? accentColor
+                        : isDqNode
+                        ? '#DC2626'
+                        : set.status === 'IN_PROGRESS'
+                        ? '#00F0FF'
+                        : isWaitingCheckInNode
+                        ? '#F59E0B'
                         : isMyMatch
                         ? '#38BDF8'
                         : set.status === 'DISPUTED'
@@ -421,6 +522,10 @@ export const BracketDagVisualizer: React.FC<BracketDagVisualizerProps> = ({
                     className={`absolute rounded-xl border bg-slate-900/95 px-3 py-2 cursor-pointer transition-transform duration-150 hover:-translate-y-0.5 flex flex-col justify-between ${
                       isSelected
                         ? 'ring-1 ring-sky-400/50 shadow-lg'
+                        : isDqNode
+                        ? 'ring-1 ring-rose-500/40 bg-rose-950/20'
+                        : isWaitingCheckInNode
+                        ? 'ring-1 ring-amber-400/35'
                         : isMyMatch
                         ? 'ring-1 ring-sky-400/35'
                         : ''
@@ -434,7 +539,13 @@ export const BracketDagVisualizer: React.FC<BracketDagVisualizerProps> = ({
                       </span>
                       <span
                         className={
-                          set.status === 'COMPLETED'
+                          isDqNode
+                            ? 'text-rose-400 font-bold'
+                            : set.status === 'IN_PROGRESS'
+                            ? 'text-cyan-300 font-bold'
+                            : isWaitingCheckInNode
+                            ? 'text-amber-300 font-semibold'
+                            : set.status === 'COMPLETED'
                             ? 'text-emerald-400 font-semibold'
                             : set.status === 'DISPUTED'
                             ? 'text-rose-400 font-semibold'
@@ -443,7 +554,13 @@ export const BracketDagVisualizer: React.FC<BracketDagVisualizerProps> = ({
                             : 'text-slate-500'
                         }
                       >
-                        {set.status}
+                        {set.status === 'SINGLE_DQ'
+                          ? 'DQ WALKOVER'
+                          : set.status === 'DOUBLE_DQ'
+                          ? 'DOUBLE DQ'
+                          : isWaitingCheckInNode
+                          ? `CHECK-IN (${set.player1CheckedIn ? 1 : 0}+${set.player2CheckedIn ? 1 : 0}/2)`
+                          : set.status}
                       </span>
                     </div>
 

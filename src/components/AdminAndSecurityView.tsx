@@ -10,8 +10,11 @@
  * - Copias de Seguridad y Restauración en Almacenamiento en la Nube (S3 / GCS / R2)
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  type DoubleDqRule,
+  type LosersBracketDqPenalty,
+  type OBFEventMetadata,
   RBAC_PERMISSIONS_MATRIX,
   TokenScope,
   UserRole,
@@ -83,6 +86,14 @@ interface AdminAndSecurityViewProps {
   thirdPartyApiKeys: ThirdPartyApiKeyItem[];
   cloudBackups: CloudBackupSummaryItem[];
   activeTournamentSlug: string;
+  activeTournamentEvent?: OBFEventMetadata;
+  onSaveTournamentCheckInConfig?: (config: {
+    enableMatchCheckIn: boolean;
+    matchCheckInTimeoutMinutes: number;
+    enableAutoDq: boolean;
+    doubleDqRule: DoubleDqRule;
+    losersBracketDqPenalty: LosersBracketDqPenalty;
+  }) => Promise<void>;
   onSaveAdminConfig: (config: Partial<AdminSummaryState> & { deepseekApiKey?: string }) => Promise<void>;
   onVerify2FA: (code: string) => Promise<{ verified: boolean; message?: string; error?: string }>;
   onRotate2FASecret: () => Promise<{ totpSecret: string; currentTotpPreview: string }>;
@@ -101,6 +112,8 @@ export const AdminAndSecurityView: React.FC<AdminAndSecurityViewProps> = ({
   thirdPartyApiKeys,
   cloudBackups,
   activeTournamentSlug,
+  activeTournamentEvent,
+  onSaveTournamentCheckInConfig,
   onSaveAdminConfig,
   onVerify2FA,
   onRotate2FASecret,
@@ -111,6 +124,41 @@ export const AdminAndSecurityView: React.FC<AdminAndSecurityViewProps> = ({
   onCreateCloudBackup,
   onRestoreCloudBackup,
 }) => {
+  // Estado de Reglas Graduables de Match Check-In y DQ del Torneo Activo
+  const [enableMatchCheckIn, setEnableMatchCheckIn] = useState<boolean>(
+    activeTournamentEvent?.enableMatchCheckIn ?? true
+  );
+  const [matchCheckInTimeoutMinutes, setMatchCheckInTimeoutMinutes] = useState<number>(
+    activeTournamentEvent?.matchCheckInTimeoutMinutes ?? 5
+  );
+  const [enableAutoDq, setEnableAutoDq] = useState<boolean>(
+    activeTournamentEvent?.enableAutoDq ?? true
+  );
+  const [doubleDqRule, setDoubleDqRule] = useState<DoubleDqRule>(
+    activeTournamentEvent?.doubleDqRule ?? 'AUTO_BYE_NEXT_ROUND'
+  );
+  const [losersBracketDqPenalty, setLosersBracketDqPenalty] =
+    useState<LosersBracketDqPenalty>(
+      activeTournamentEvent?.losersBracketDqPenalty ?? 'DROP_TO_LOSERS'
+    );
+  const [checkInConfigSavedBanner, setCheckInConfigSavedBanner] = useState<string>('');
+
+  useEffect(() => {
+    setEnableMatchCheckIn(activeTournamentEvent?.enableMatchCheckIn ?? true);
+    setMatchCheckInTimeoutMinutes(activeTournamentEvent?.matchCheckInTimeoutMinutes ?? 5);
+    setEnableAutoDq(activeTournamentEvent?.enableAutoDq ?? true);
+    setDoubleDqRule(activeTournamentEvent?.doubleDqRule ?? 'AUTO_BYE_NEXT_ROUND');
+    setLosersBracketDqPenalty(
+      activeTournamentEvent?.losersBracketDqPenalty ?? 'DROP_TO_LOSERS'
+    );
+  }, [
+    activeTournamentSlug,
+    activeTournamentEvent?.enableMatchCheckIn,
+    activeTournamentEvent?.matchCheckInTimeoutMinutes,
+    activeTournamentEvent?.enableAutoDq,
+    activeTournamentEvent?.doubleDqRule,
+    activeTournamentEvent?.losersBracketDqPenalty,
+  ]);
   const [deepseekInputKey, setDeepseekInputKey] = useState<string>('');
   const [deepseekModel, setDeepseekModel] = useState<'deepseek-chat' | 'deepseek-reasoner' | 'deepseek-vl'>(
     adminSummary.deepseekModel || 'deepseek-chat'
@@ -146,6 +194,26 @@ export const AdminAndSecurityView: React.FC<AdminAndSecurityViewProps> = ({
   const [backupLabel, setBackupLabel] = useState<string>('Snapshot Oficial Pre-Playoffs');
 
   const canConfigureAdmin = RBAC_PERMISSIONS_MATRIX[activeRole]?.canConfigureDeepSeekAndSecurity;
+  const canConfigureTournamentRules =
+    canConfigureAdmin ||
+    activeRole === 'TOURNAMENT_DIRECTOR' ||
+    activeRole === 'REFEREE';
+
+  const handleSaveCheckInRules = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!onSaveTournamentCheckInConfig) return;
+    await onSaveTournamentCheckInConfig({
+      enableMatchCheckIn,
+      matchCheckInTimeoutMinutes,
+      enableAutoDq,
+      doubleDqRule,
+      losersBracketDqPenalty,
+    });
+    setCheckInConfigSavedBanner(
+      'Reglas de Match Check-In, Single DQ y Double DQ actualizadas en vivo (Worker BullMQ sincronizado).'
+    );
+    setTimeout(() => setCheckInConfigSavedBanner(''), 4000);
+  };
 
   const handleSaveConfig = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -194,6 +262,165 @@ export const AdminAndSecurityView: React.FC<AdminAndSecurityViewProps> = ({
           Estás visualizando en rol <strong>{activeRole}</strong>. Para editar la API Key de DeepSeek o rotar secretos 2FA, selecciona el rol <strong>SUPER_ADMIN</strong> en el selector superior.
         </div>
       )}
+
+      {/* SECCIÓN 0: REGLAS GRADUABLES DE MATCH CHECK-IN Y DESCALIFICACIÓN AUTOMÁTICA (DQ / DOUBLE DQ) */}
+      <form
+        onSubmit={handleSaveCheckInRules}
+        className="border border-amber-500/40 bg-slate-900/90 rounded-xl p-5 flex flex-col gap-4"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-800">
+          <div>
+            <h2 className="text-base font-semibold text-white">
+              00. Reglas Graduables de Match Check-In por Pelea/Set & Descalificación Automática (BullMQ Worker)
+            </h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Torneo activo: <strong className="text-sky-300">{activeTournamentEvent?.name || activeTournamentSlug}</strong> · Evita que el torneo se congele esperando a jugadores ausentes.
+            </p>
+          </div>
+          <span className="px-2.5 py-1 rounded-md bg-amber-500/15 border border-amber-400/40 text-amber-300 text-xs font-mono font-semibold">
+            {enableMatchCheckIn
+              ? `Check-In Activo (${matchCheckInTimeoutMinutes} min)`
+              : 'Check-In Desactivado'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+          {/* 1. Habilitar Check-In por Pelea */}
+          <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex flex-col justify-between gap-2">
+            <div>
+              <label className="font-semibold text-white block mb-1">
+                Habilitar Check-In por Pelea (enableMatchCheckIn)
+              </label>
+              <p className="text-[11px] text-slate-400">
+                Exige que ambos jugadores confirmen presencia antes de abrir el reporte de marcador.
+              </p>
+            </div>
+            <div className="flex items-center justify-between pt-2 border-t border-slate-800">
+              <label className="flex items-center gap-2 text-slate-200 font-medium cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={enableMatchCheckIn}
+                  disabled={!canConfigureTournamentRules}
+                  onChange={(e) => setEnableMatchCheckIn(e.target.checked)}
+                  className="rounded border-slate-700 bg-slate-900"
+                />
+                {enableMatchCheckIn ? 'Activado' : 'Desactivado'}
+              </label>
+              <label className="flex items-center gap-1.5 text-[11px] text-amber-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={enableAutoDq}
+                  disabled={!canConfigureTournamentRules || !enableMatchCheckIn}
+                  onChange={(e) => setEnableAutoDq(e.target.checked)}
+                  className="rounded border-slate-700 bg-slate-900"
+                />
+                Auto-DQ BullMQ
+              </label>
+            </div>
+          </div>
+
+          {/* 2. Tiempo Límite de Check-In (Graduable 2 a 30 min) */}
+          <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex flex-col justify-between gap-2">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="font-semibold text-white">
+                  Tiempo Límite (matchCheckInTimeoutMinutes)
+                </label>
+                <span className="font-mono tabular-nums font-bold text-amber-300">
+                  {matchCheckInTimeoutMinutes} min
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400">
+                Graduable de <strong>2 a 30 minutos</strong> (Valor por defecto: 5 minutos).
+              </p>
+            </div>
+            <div className="pt-1">
+              <input
+                type="range"
+                min={2}
+                max={30}
+                step={1}
+                value={matchCheckInTimeoutMinutes}
+                disabled={!canConfigureTournamentRules || !enableMatchCheckIn}
+                onChange={(e) => setMatchCheckInTimeoutMinutes(Number(e.target.value))}
+                className="w-full accent-amber-400 cursor-pointer"
+              />
+              <div className="flex justify-between text-[10px] font-mono text-slate-500 mt-0.5">
+                <span>2 min</span>
+                <span>5 min (Default)</span>
+                <span>15 min</span>
+                <span>30 min</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 3. Acción ante Descalificación Doble (doubleDqRule) */}
+          <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex flex-col justify-between gap-2">
+            <div>
+              <label className="font-semibold text-white block mb-1">
+                Acción ante Double DQ (doubleDqRule)
+              </label>
+              <p className="text-[11px] text-slate-400">
+                Define cómo resuelve el motor cuando ninguno de los 2 rivales hace Check-In.
+              </p>
+            </div>
+            <select
+              value={doubleDqRule}
+              disabled={!canConfigureTournamentRules || !enableMatchCheckIn}
+              onChange={(e) => setDoubleDqRule(e.target.value as DoubleDqRule)}
+              className="w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-2 text-xs text-white"
+            >
+              <option value="AUTO_BYE_NEXT_ROUND">
+                AUTO_BYE_NEXT_ROUND (Recomendado: Rival siguiente recibe BYE)
+              </option>
+              <option value="RANDOM_COIN_FLIP">
+                RANDOM_COIN_FLIP (Avanza uno al azar Coin Flip)
+              </option>
+              <option value="PAUSE_FOR_ADMIN">
+                PAUSE_FOR_ADMIN (Pausar nodo y alertar a Árbitro/Admin)
+              </option>
+            </select>
+          </div>
+
+          {/* 4. Penalización en Doble Eliminación (losersBracketDqPenalty) */}
+          <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex flex-col justify-between gap-2">
+            <div>
+              <label className="font-semibold text-white block mb-1">
+                Penalización en Doble Eliminación (losersBracketDqPenalty)
+              </label>
+              <p className="text-[11px] text-slate-400">
+                Comportamiento si un jugador recibe DQ estando en Winners Bracket.
+              </p>
+            </div>
+            <select
+              value={losersBracketDqPenalty}
+              disabled={!canConfigureTournamentRules || !enableMatchCheckIn}
+              onChange={(e) =>
+                setLosersBracketDqPenalty(e.target.value as LosersBracketDqPenalty)
+              }
+              className="w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-2 text-xs text-white"
+            >
+              <option value="DROP_TO_LOSERS">
+                DROP_TO_LOSERS (Cae a Losers Bracket para jugar si llega tarde)
+              </option>
+              <option value="ELIMINATE_FROM_EVENT">
+                ELIMINATE_FROM_EVENT (Eliminado de todo el torneo inmediatamente)
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-800">
+          <span className="text-xs text-emerald-400">{checkInConfigSavedBanner}</span>
+          <button
+            type="submit"
+            disabled={!canConfigureTournamentRules}
+            className="px-4 py-2 rounded-lg bg-amber-400 hover:bg-amber-300 disabled:opacity-50 text-slate-950 font-semibold text-xs whitespace-nowrap shrink-0 cursor-pointer"
+          >
+            Guardar Reglas de Match Check-In y DQ
+          </button>
+        </div>
+      </form>
 
       {/* SECCIÓN 1: CONFIGURACIÓN DE DEEPSEEK API KEY Y MOTOR IA MULTIMODAL */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

@@ -1,0 +1,268 @@
+// ============================================================================
+// nikBrackets Pro — Esquema Prisma Optimizado
+// Incluye:
+// 1. Perfilado Progresivo (Progressive Profiling) + Multi-ID por Consola + Mains
+// 2. Máquina de Estados de Match Check-In, Single DQ y Double DQ con BullMQ
+// 3. Jerarquía de Ligas / Circuitos de 6 Meses (Circuit & CircuitStanding)
+// 4. Gestión de Torneos Masivos (3,000+ Participantes: Waves, 64 Pools & Top 128)
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ======================================================
+// 0. CATÁLOGO DE JUEGOS Y CIRCUITOS DE TEMPORADA (6 MESES)
+// ======================================================
+model Game {
+  id          String       @id @default(uuid())
+  slug        String       @unique // ej: "tekken8", "sf6", "ggst"
+  name        String       // ej: "Tekken 8", "Street Fighter 6"
+  circuits    Circuit[]
+  tournaments Tournament[]
+}
+
+// 1. LIGA / CIRCUITO GENERAL (CONTENEDOR DE TEMPORADA)
+model Circuit {
+  id              String            @id @default(uuid())
+  name            String            // Ej: "Capcom Pro Tour World Warrior 2026 - Latam North"
+  slug            String            @unique
+  gameId          String
+  game            Game              @relation(fields: [gameId], references: [id])
+  startDate       DateTime
+  endDate         DateTime
+
+  pointsRulesJson Json              // Ej: { "1st": 100, "2nd": 75, "3rd": 60, "4th": 40 }
+  bestXEvents     Int?              // Ej: Tomar solo los mejores 8 torneos de 12 (Best of X Drops)
+  finalsTopCut    Int               @default(8) // Clasificación automática Top 8 o Top 16 a Season Finals
+
+  tournaments     Tournament[]      // Torneos quincenales vinculados
+  standings       CircuitStanding[]
+  createdAt       DateTime          @default(now())
+}
+
+// 2. TABLA DE POSICIONES ACUMULADA DE LA TEMPORADA
+model CircuitStanding {
+  id              String   @id @default(uuid())
+  circuitId       String
+  circuit         Circuit  @relation(fields: [circuitId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  totalPoints     Int      @default(0)
+  grossPoints     Int      @default(0) // Puntos antes de aplicar regla de descarte (Best of X)
+  eventsPlayed    Int      @default(0)
+  tournamentsWon  Int      @default(0)
+  rankPosition    Int?
+  qualifiedFinals Boolean  @default(false)
+
+  @@unique([circuitId, userId])
+}
+
+// ======================================================
+// 1. USUARIO (REGISTRO ULTRARRÁPIDO + PERFIL PROGRESIVO)
+// ======================================================
+model User {
+  id               String            @id @default(uuid())
+  email            String            @unique
+  name             String
+  image            String?
+
+  // Datos opcionales recopilados progresivamente al inscribirse o en Admin de Usuario
+  phone            String?           // Teléfono móvil
+  whatsapp         String?           // Número de WhatsApp para alertas de partida
+  country          String?           // País (ISO-2)
+  city             String?           // Ciudad (útil para eventos presenciales/LAN)
+  discordHandle    String?           // Tag de Discord (ej: @jugador#1234)
+  twitchHandle     String?           // Canal de Twitch
+
+  // Relaciones
+  gameAccounts     GameAccount[]     // Múltiples IDs (PS5, PC, Xbox, Switch)
+  gamePreferences  UserGamePref[]    // Mains y secundarios por juego
+  eventEntrants    EventEntrant[]
+  circuitStandings CircuitStanding[] // Posiciones acumuladas en ligas de 6 meses
+  captainedPools   TournamentPool[]  @relation("PoolCaptainReferees")
+
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+enum Platform {
+  PS5
+  PC_STEAM
+  XBOX_SERIES
+  NINTENDO_SWITCH
+  CROSSPLAY
+}
+
+model GameAccount {
+  id               String          @id @default(uuid())
+  userId           String
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gameSlug         String          // ej: "tekken8", "sf6", "ggst"
+  platform         Platform
+  inGameId         String          // ej: "349Q-tay4-YYH8" (PS5) o "2jdr-i7LF-23HT" (PC)
+  isPrimary        Boolean         @default(false)
+
+  eventEntrants    EventEntrant[]
+
+  @@unique([userId, gameSlug, platform])
+}
+
+model UserGamePref {
+  id                 String        @id @default(uuid())
+  userId             String
+  user               User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gameSlug           String
+  mainCharacter      String
+  secondaryCharacter String?
+
+  @@unique([userId, gameSlug])
+}
+
+// ======================================================
+// 2. TORNEO, OLAS (WAVES), POOLS (3,000+) & REGLAS DQ
+// ======================================================
+model Tournament {
+  id                         String                 @id @default(uuid())
+  slug                       String                 @unique
+  name                       String
+  gameSlug                   String
+  gameId                     String?
+  game                       Game?                  @relation(fields: [gameId], references: [id])
+
+  // Vinculación opcional a Liga / Circuito de 6 meses
+  circuitId                  String?
+  circuit                    Circuit?               @relation(fields: [circuitId], references: [id])
+  circuitStopNumber          Int?                   // Ej: Fecha #1, Fecha #2 ... Fecha #12
+
+  // --- ESCALABILIDAD MASIVA (3,000+ PARTICIPANTES: WAVES & POOLS) ---
+  isMassiveScale             Boolean                @default(false)
+  waveCheckInLeadMinutes     Int                    @default(30) // Se abre 30 min antes de la Ola
+  topCutMainBracketSize      Int                    @default(128) // Top 128 Main Bracket
+
+  // --- REGLAS DE CHECK-IN Y DESCALIFICACIÓN (DQ) ---
+  enableMatchCheckIn         Boolean                @default(true)
+  matchCheckInTimeoutMinutes Int                    @default(5) // Graduable: 2 a 30 min
+  enableAutoDq               Boolean                @default(true)
+  doubleDqRule               DoubleDqRule           @default(AUTO_BYE_NEXT_ROUND)
+  losersBracketDqPenalty     LosersBracketDqPenalty @default(DROP_TO_LOSERS)
+
+  waves                      TournamentWave[]
+  pools                      TournamentPool[]
+  entrants                   EventEntrant[]
+  sets                       Set[]
+
+  createdAt                  DateTime               @default(now())
+  updatedAt                  DateTime               @updatedAt
+}
+
+// OLAS DE HORARIOS (Ej: Ola A 10:00 AM, Ola B 12:00 PM, Ola C 02:00 PM, Ola D 04:00 PM)
+model TournamentWave {
+  id                String           @id @default(uuid())
+  tournamentId      String
+  tournament        Tournament       @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  code              String           // "WAVE_A", "WAVE_B", "WAVE_C", "WAVE_D"
+  label             String           // "Ola A (10:00 AM)"
+  startTime         DateTime
+  checkInOpensAt    DateTime         // 30 minutos antes de startTime
+  checkInClosesAt   DateTime
+  batchAutoDqDone   Boolean          @default(false)
+
+  pools             TournamentPool[]
+}
+
+// POOLS DE GRUPOS (Ej: Pool A1..A16, B1..B16, C1..C16, D1..D16 -> 48 a 64 jugadores c/u)
+model TournamentPool {
+  id                String         @id @default(uuid())
+  tournamentId      String
+  tournament        Tournament     @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  waveId            String
+  wave              TournamentWave @relation(fields: [waveId], references: [id], onDelete: Cascade)
+  code              String         // "A1", "A2" ... "D16"
+  stationZone       String         // "Zona A · Estaciones 01-08"
+
+  // Delegación de Arbitraje por Zonas (Pool Captain / Referee)
+  captainRefereeId  String?
+  captainReferee    User?          @relation("PoolCaptainReferees", fields: [captainRefereeId], references: [id])
+
+  entrants          EventEntrant[]
+  sets              Set[]
+
+  @@unique([tournamentId, code])
+}
+
+enum DoubleDqRule {
+  AUTO_BYE_NEXT_ROUND // El rival de la siguiente ronda recibe un BYE automático
+  RANDOM_COIN_FLIP    // Avanza uno al azar para no dejar huecos vacíos
+  PAUSE_FOR_ADMIN     // Pausa la llave y alerta al árbitro
+}
+
+enum LosersBracketDqPenalty {
+  DROP_TO_LOSERS       // Si se ausenta en Winners, cae a Losers Bracket
+  ELIMINATE_FROM_EVENT // Si se ausenta en Winners, queda eliminado de todo el torneo
+}
+
+model EventEntrant {
+  id                 String          @id @default(uuid())
+  tournamentId       String
+  tournament         Tournament      @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  poolId             String?
+  pool               TournamentPool? @relation(fields: [poolId], references: [id])
+  userId             String
+  user               User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gameAccountId      String?
+  gameAccount        GameAccount?    @relation(fields: [gameAccountId], references: [id])
+  mainCharacter      String
+  secondaryCharacter String?
+  initialSeed        Int
+  waveCheckedIn      Boolean         @default(false)
+
+  @@unique([tournamentId, userId])
+}
+
+// ======================================================
+// 3. SET / PARTIDA Y MÁQUINA DE ESTADOS DE CHECK-IN
+// ======================================================
+model Set {
+  id                String          @id @default(uuid())
+  tournamentId      String
+  tournament        Tournament      @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  poolId            String?
+  pool              TournamentPool? @relation(fields: [poolId], references: [id])
+
+  // --- CONTROL DE CHECK-IN DE LA PELEA ---
+  player1CheckedIn  Boolean         @default(false)
+  player2CheckedIn  Boolean         @default(false)
+  checkInStartedAt  DateTime?       // Momento en que la pelea estuvo lista (ambos rivales definidos)
+  checkInDeadlineAt DateTime?       // Hora exacta en la que expirará el timer y se aplicará DQ
+  checkInPaused     Boolean         @default(false)
+
+  // --- ESTADO Y RESULTADO ---
+  state             SetStatus       @default(WAITING_CHECKIN)
+  isDq              Boolean         @default(false)
+  dqReason          String?         // "PLAYER1_TIMEOUT", "PLAYER2_TIMEOUT", "DOUBLE_TIMEOUT"
+
+  player1Score      Int             @default(0)
+  player2Score      Int             @default(0)
+  winnerId          String?
+  loserId           String?
+  nextWinSetId      String?
+  nextLoseSetId     String?
+}
+
+enum SetStatus {
+  WAITING_CHECKIN   // Esperando a que ambos jugadores confirmen presencia
+  PARTIAL_CHECKIN   // Uno de los dos ya hizo check-in (el reloj sigue corriendo)
+  IN_PROGRESS       // Ambos confirmaron, pelea en curso (<SingleScreenScoreReporter /> activo)
+  REPORTED_PARTIAL  // Uno reportó resultado
+  COMPLETED         // Pelea finalizada normalmente
+  DISPUTED          // Conflicto de marcador
+  SINGLE_DQ         // Finalizada por Walkover (Inasistencia de 1 jugador)
+  DOUBLE_DQ         // Anulada por inasistencia de ambos jugadores
+}
