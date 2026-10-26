@@ -1330,3 +1330,5 @@ export const BracketCanvasWebGL3D: React.FC<BracketCanvasWebGL3DProps> = ({
     </div>
   );
 };
+
+export default BracketCanvasWebGL3D;
