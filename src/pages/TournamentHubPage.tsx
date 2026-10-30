@@ -9,7 +9,7 @@
  */
 
 import React, { Suspense, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft,
   Award,
@@ -23,6 +23,7 @@ import {
   Eye,
   FileSpreadsheet,
   FileText,
+  Flame,
   Gamepad2,
   Globe,
   HelpCircle,
@@ -237,12 +238,40 @@ export const TournamentHubPage: React.FC<TournamentHubPageProps> = ({
   compactDensity = false,
 }) => {
   const { tournamentSlug } = useParams<{ tournamentSlug: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  // Sub-pestañas internas del torneo
+  const tabQueryParam = searchParams.get('tab');
+  // Sub-pestañas internas del torneo (Soporta navegación directa a ?tab=circuits)
   const [subTab, setSubTab] = useState<
     'brackets' | 'participants' | 'reporter' | 'circuits' | 'analytics' | 'admin'
-  >('brackets');
+  >(() => {
+    if (
+      tabQueryParam === 'circuits' ||
+      tabQueryParam === 'participants' ||
+      tabQueryParam === 'reporter' ||
+      tabQueryParam === 'analytics' ||
+      tabQueryParam === 'admin'
+    ) {
+      return tabQueryParam;
+    }
+    return 'brackets';
+  });
+
+  // Reaccionar a cambios en query params
+  useEffect(() => {
+    const qTab = searchParams.get('tab');
+    if (
+      qTab === 'circuits' ||
+      qTab === 'brackets' ||
+      qTab === 'participants' ||
+      qTab === 'reporter' ||
+      qTab === 'analytics' ||
+      qTab === 'admin'
+    ) {
+      setSubTab(qTab as any);
+    }
+  }, [searchParams]);
 
   // Modo de visualización en la pestaña de Brackets: 3D WebGL vs 2D DAG
   const [bracketViewMode, setBracketViewMode] = useState<'3D' | '2D'>('3D');
@@ -398,6 +427,31 @@ export const TournamentHubPage: React.FC<TournamentHubPageProps> = ({
                   <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
                   EN VIVO
                 </span>
+
+                {/* Badge Jerarquía OBF (Nivel 1, 2 o 3) */}
+                {obf.event.hierarchyLevel === 'CIRCUIT' ? (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-sky-500/20 text-sky-300 border border-sky-500/40 flex items-center gap-1">
+                    <Flame className="w-3 h-3 text-sky-400" />
+                    <span>NIVEL 1: CIRCUITO 6M</span>
+                  </span>
+                ) : obf.event.hierarchyLevel === 'MACRO_EVENT' ? (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">
+                    <Globe className="w-3 h-3 text-amber-400" />
+                    <span>NIVEL 2: MACRO EVENTO</span>
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 flex items-center gap-1">
+                    <Swords className="w-3 h-3 text-indigo-400" />
+                    <span>NIVEL 3: TORNEO OBF</span>
+                  </span>
+                )}
+
+                {obf.event.country && (
+                  <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-slate-800 text-slate-300 border border-slate-700">
+                    📍 {obf.event.city ? `${obf.event.city}, ` : ''}{obf.event.country}
+                  </span>
+                )}
+
                 <span className="px-2.5 py-0.5 rounded text-[11px] font-mono bg-sky-950/70 text-sky-300 border border-sky-800/50">
                   {obf.event.gameName}
                 </span>
@@ -412,6 +466,21 @@ export const TournamentHubPage: React.FC<TournamentHubPageProps> = ({
               <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
                 {obf.event.name}
               </h1>
+
+              {/* Breadcrumb si es Sub-Torneo hijo de un Macro Evento */}
+              {obf.event.parentMacroEventSlug && (
+                <div className="flex items-center gap-2 text-xs text-amber-400 pt-0.5">
+                  <span className="text-slate-400">Perteneciente al Macro Evento:</span>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/t/${obf.event.parentMacroEventSlug}`)}
+                    className="font-bold underline hover:text-amber-300 flex items-center gap-1"
+                  >
+                    <span>{obf.event.parentMacroEventSlug}</span>
+                    <span>→</span>
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Selector de Torneos Rápido si hay múltiples */}
@@ -434,6 +503,63 @@ export const TournamentHubPage: React.FC<TournamentHubPageProps> = ({
               </div>
             )}
           </div>
+
+          {/* =========================================================================
+              BARRA DE SUB-TORNEOS / PARADAS POR PAÍS (SI ES MACRO EVENTO)
+             ========================================================================= */}
+          {obf.event.subTournaments && obf.event.subTournaments.length > 0 && (
+            <div className="pt-2">
+              <div className="p-3.5 rounded-2xl border border-amber-500/30 bg-amber-950/20 backdrop-blur-sm space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2 text-amber-300 font-bold">
+                    <Globe className="w-4 h-4 text-amber-400" />
+                    <span>Macro Evento Contenedor · Sub-Torneos / Paradas por País ({obf.event.subTournaments.length})</span>
+                  </div>
+                  <span className="text-[11px] text-slate-400 font-mono hidden sm:inline">
+                    Haz clic en cualquier parada para navegar a su bracket específico
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  {obf.event.subTournaments.map((sub) => {
+                    const isSelected = obf.event.tournamentSlug === sub.slug;
+                    return (
+                      <button
+                        key={sub.slug}
+                        type="button"
+                        onClick={() => navigate(`/t/${sub.slug}`)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all ${
+                          isSelected
+                            ? 'bg-amber-400 text-slate-950 font-black shadow-md shadow-amber-500/20'
+                            : 'bg-slate-900/90 text-slate-200 border border-slate-800 hover:border-amber-500/50 hover:bg-slate-800'
+                        }`}
+                      >
+                        <span className="text-xs">
+                          {sub.country === 'PE'
+                            ? '🇵🇪'
+                            : sub.country === 'CO'
+                            ? '🇨🇴'
+                            : sub.country === 'MX'
+                            ? '🇲🇽'
+                            : sub.country === 'CL'
+                            ? '🇨🇱'
+                            : sub.country === 'AR'
+                            ? '🇦🇷'
+                            : sub.country === 'BR'
+                            ? '🇧🇷'
+                            : '📍'}
+                        </span>
+                        <span>{sub.name}</span>
+                        <span className="text-[10px] font-mono opacity-80">
+                          ({sub.entrantsCount}P)
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* =========================================================================
               BARRA DE SIMULACIÓN DE ROLES RBAC EN TIEMPO REAL

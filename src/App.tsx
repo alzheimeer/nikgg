@@ -61,6 +61,10 @@ import {
   type TournamentRoleAssignment,
 } from './components/AuthAndUsersModal';
 import { TournamentSummaryCardData } from './components/PublicLandingAndStartHub';
+import {
+  CreateTournamentModal,
+  type CreateTournamentSubmitPayload,
+} from './components/CreateTournamentModal';
 import { LandingPage } from './pages/LandingPage';
 import { ExplorePage } from './pages/ExplorePage';
 import { auth, firebaseSignOut, onAuthStateChanged } from './lib/firebase';
@@ -69,7 +73,9 @@ import {
   Boxes,
   ExternalLink,
   Eye,
+  Flame,
   Globe,
+  Layers,
   LogIn,
   LogOut,
   Moon,
@@ -233,7 +239,7 @@ function GlobalNavbar({
                 to={`/t/${activeTournamentSlug}`}
                 className={({ isActive }) =>
                   `px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors ${
-                    isActive
+                    isActive && !location.search.includes('tab=circuits')
                       ? 'bg-sky-500/10 text-sky-400 border border-sky-500/30 font-bold'
                       : 'text-slate-300 hover:text-white hover:bg-slate-900'
                   }`
@@ -243,6 +249,23 @@ function GlobalNavbar({
                 <span>Torneo Activo</span>
                 <span className="px-1.5 py-0.2 rounded text-[9px] font-mono bg-rose-500/20 text-rose-300 border border-rose-500/30">
                   LIVE
+                </span>
+              </NavLink>
+
+              <NavLink
+                to={`/t/${activeTournamentSlug}?tab=circuits`}
+                className={() =>
+                  `px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors ${
+                    location.pathname.startsWith('/t/') && location.search.includes('tab=circuits')
+                      ? 'bg-amber-500/15 text-amber-400 border border-amber-500/40 font-bold'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-900'
+                  }`
+                }
+              >
+                <Layers className="w-3.5 h-3.5 text-amber-400" />
+                <span>Circuitos 6M & Masivos 3000+</span>
+                <span className="px-1.5 py-0.2 rounded text-[9px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold">
+                  PRO
                 </span>
               </NavLink>
             </nav>
@@ -370,10 +393,22 @@ function GlobalNavbar({
           <NavLink
             to={`/t/${activeTournamentSlug}`}
             className={({ isActive }) =>
-              `px-3 py-1 rounded-lg ${isActive ? 'bg-sky-500 text-slate-950 font-bold' : 'text-slate-400'}`
+              `px-3 py-1 rounded-lg ${isActive && !location.search.includes('tab=circuits') ? 'bg-sky-500 text-slate-950 font-bold' : 'text-slate-400'}`
             }
           >
             Torneo Activo
+          </NavLink>
+          <NavLink
+            to={`/t/${activeTournamentSlug}?tab=circuits`}
+            className={() =>
+              `px-3 py-1 rounded-lg whitespace-nowrap ${
+                location.pathname.startsWith('/t/') && location.search.includes('tab=circuits')
+                  ? 'bg-amber-500 text-slate-950 font-bold'
+                  : 'text-amber-400/90'
+              }`
+            }
+          >
+            Circuitos 6M
           </NavLink>
         </div>
       </div>
@@ -439,21 +474,9 @@ export default function App() {
   const [compactDensity, setCompactDensity] = useState<boolean>(false);
   const [highContrastMode, setHighContrastMode] = useState<boolean>(false);
 
-  // Modal Wizard de Creación de Torneo (2 pasos)
+  // Modal Integral de Creación de Torneo / Macro Evento / Circuito
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
-  const [createWizardStep, setCreateWizardStep] = useState<1 | 2>(1);
-  const [newTourneyName, setNewTourneyName] = useState<string>('Copa Mundial OBF 2026');
-  const [newTourneyGameSlug, setNewTourneyGameSlug] = useState<string>('tekken8');
-  const [newTourneyFormat, setNewTourneyFormat] = useState<TournamentFormat>('two_stage');
-  const [newTourneyEntrants, setNewTourneyEntrants] = useState<number>(8);
-  const [newTourneyPrize, setNewTourneyPrize] = useState<number>(25000);
-  const [newTourneyEnableMatchCheckIn, setNewTourneyEnableMatchCheckIn] = useState<boolean>(true);
-  const [newTourneyCheckInTimeoutMinutes, setNewTourneyCheckInTimeoutMinutes] = useState<number>(5);
-  const [newTourneyEnableAutoDq, setNewTourneyEnableAutoDq] = useState<boolean>(true);
-  const [newTourneyDoubleDqRule, setNewTourneyDoubleDqRule] =
-    useState<DoubleDqRule>('AUTO_BYE_NEXT_ROUND');
-  const [newTourneyLosersPenalty, setNewTourneyLosersPenalty] =
-    useState<LosersBracketDqPenalty>('DROP_TO_LOSERS');
+  const [isSubmittingCreate, setIsSubmittingCreate] = useState<boolean>(false);
 
   // IA DeepSeek
   const [aiAuditReport, setAiAuditReport] = useState<string>('');
@@ -686,45 +709,40 @@ export default function App() {
     }
   };
 
-  // Creación de Torneo Wizard
-  const handleCreateTournament = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Creación Integral de Torneo / Macro Evento / Circuito 6M
+  const handleCreateTournament = async (payload: CreateTournamentSubmitPayload) => {
     if (!currentUser || !authToken) {
       setShowCreateModal(false);
       handleOpenAuthModal('login');
       return;
     }
-    const gameMeta =
-      ESPORTS_GAMES_CATALOG.find((g) => g.slug === newTourneyGameSlug) || ESPORTS_GAMES_CATALOG[0];
-    const res = await fetch('/api/tournaments', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${authToken}`,
-      },
-      body: JSON.stringify({
-        name: newTourneyName,
-        gameName: gameMeta.name,
-        gameSlug: gameMeta.slug,
-        format: newTourneyFormat,
-        entrantCount: newTourneyEntrants,
-        prizePool: newTourneyPrize,
-        enableMatchCheckIn: newTourneyEnableMatchCheckIn,
-        matchCheckInTimeoutMinutes: newTourneyCheckInTimeoutMinutes,
-        enableAutoDq: newTourneyEnableAutoDq,
-        doubleDqRule: newTourneyDoubleDqRule,
-        losersBracketDqPenalty: newTourneyLosersPenalty,
-      }),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      setShowCreateModal(false);
-      setCreateWizardStep(1);
-      await fetchBootstrap(data.slug);
-      await fetchUsersAndRbacData(authToken, data.slug);
-      window.location.href = `/t/${data.slug}`;
+    setIsSubmittingCreate(true);
+    try {
+      const res = await fetch('/api/tournaments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+          ...payload,
+          creatorUid: currentUser.uid,
+          creatorEmail: currentUser.email,
+          creatorDisplayName: currentUser.displayName || currentUser.gamerTag,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setShowCreateModal(false);
+        await fetchBootstrap(data.slug);
+        await fetchUsersAndRbacData(authToken, data.slug);
+        window.location.href = `/t/${data.slug}`;
+      }
+    } finally {
+      setIsSubmittingCreate(false);
     }
   };
+
 
   // Auto-Inscripción Progresiva
   const handleSelfEnroll = async (slug: string) => {
@@ -1187,253 +1205,14 @@ export default function App() {
             MODALES GLOBALES Y DRAWERS
            ========================================================================= */}
 
-        {/* MODAL WIZARD DE 2 PASOS PARA CREACIÓN DE TORNEO */}
-        {showCreateModal && (
-          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-            <form
-              onSubmit={handleCreateTournament}
-              className="w-full max-w-xl rounded-2xl border border-slate-800 bg-slate-950 p-6 space-y-4 shadow-2xl"
-            >
-              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                <div>
-                  <h3 className="text-base font-bold text-white">
-                    Wizard de Creación de Torneo · Paso {createWizardStep} de 2
-                  </h3>
-                  <p className="text-xs text-sky-400">
-                    {createWizardStep === 1
-                      ? 'Paso 1: Estructura General, Juego y Formato OBF v1.0'
-                      : 'Paso 2: Reglas Graduables de Check-In por Pelea/Set y DQ Automático'}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowCreateModal(false);
-                    setCreateWizardStep(1);
-                  }}
-                  className="p-1 text-slate-400 hover:text-white"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Indicador de Pasos del Wizard */}
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <button
-                  type="button"
-                  onClick={() => setCreateWizardStep(1)}
-                  className={`py-2 px-3 rounded-lg border font-medium text-left ${
-                    createWizardStep === 1
-                      ? 'border-sky-500/60 bg-sky-500/10 text-sky-300'
-                      : 'border-slate-800 bg-slate-900 text-slate-400'
-                  }`}
-                >
-                  1. Datos & Formato del Torneo
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCreateWizardStep(2)}
-                  className={`py-2 px-3 rounded-lg border font-medium text-left ${
-                    createWizardStep === 2
-                      ? 'border-amber-500/60 bg-amber-500/10 text-amber-300'
-                      : 'border-slate-800 bg-slate-900 text-slate-400'
-                  }`}
-                >
-                  2. Check-In por Pelea & Reglas DQ
-                </button>
-              </div>
-
-              {createWizardStep === 1 ? (
-                <div className="space-y-3 text-xs">
-                  <div>
-                    <label className="block text-slate-300 mb-1">Nombre Oficial del Torneo</label>
-                    <input
-                      type="text"
-                      required
-                      value={newTourneyName}
-                      onChange={(e) => setNewTourneyName(e.target.value)}
-                      className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-slate-300 mb-1">Título eSports Oficial</label>
-                      <select
-                        value={newTourneyGameSlug}
-                        onChange={(e) => setNewTourneyGameSlug(e.target.value)}
-                        className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white"
-                      >
-                        {ESPORTS_GAMES_CATALOG.map((g) => (
-                          <option key={g.slug} value={g.slug}>
-                            {g.name} ({g.genre})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-slate-300 mb-1">Formato OBF v1.0</label>
-                      <select
-                        value={newTourneyFormat}
-                        onChange={(e) => setNewTourneyFormat(e.target.value as TournamentFormat)}
-                        className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white"
-                      >
-                        <option value="two_stage">Two-Stage (Suizo + Doble Elim)</option>
-                        <option value="double_elimination">Doble Eliminación</option>
-                        <option value="single_elimination">Eliminación Simple (2^k)</option>
-                        <option value="swiss">Sistema Suizo</option>
-                        <option value="round_robin">Round Robin (Berger)</option>
-                        <option value="free_for_all">Free-For-All</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-slate-300 mb-1">Cantidad de Participantes</label>
-                      <select
-                        value={newTourneyEntrants}
-                        onChange={(e) => setNewTourneyEntrants(Number(e.target.value))}
-                        className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 font-mono tabular-nums text-white"
-                      >
-                        <option value={4}>4 Competidores</option>
-                        <option value={8}>8 Competidores</option>
-                        <option value={12}>12 Competidores</option>
-                        <option value={16}>16 Competidores</option>
-                        <option value={24}>24 Competidores (Two-Stage 3D)</option>
-                        <option value={32}>32 Competidores</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-slate-300 mb-1">Prize Pool (USD)</label>
-                      <input
-                        type="number"
-                        min={0}
-                        step={500}
-                        value={newTourneyPrize}
-                        onChange={(e) => setNewTourneyPrize(Number(e.target.value))}
-                        className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 font-mono tabular-nums text-white"
-                      />
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3.5 text-xs">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <label className="flex items-center justify-between p-3 rounded-lg border border-slate-800 bg-slate-900 cursor-pointer">
-                      <div>
-                        <div className="font-semibold text-white">Habilitar Check-In por Pelea</div>
-                        <div className="text-[11px] text-slate-400">matchCheckIn</div>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={newTourneyEnableMatchCheckIn}
-                        onChange={(e) => setNewTourneyEnableMatchCheckIn(e.target.checked)}
-                        className="h-4 w-4 accent-amber-400"
-                      />
-                    </label>
-
-                    <label className="flex items-center justify-between p-3 rounded-lg border border-slate-800 bg-slate-900 cursor-pointer">
-                      <div>
-                        <div className="font-semibold text-white">Auto-DQ por Timeout</div>
-                        <div className="text-[11px] text-slate-400">BullMQ Scheduler</div>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={newTourneyEnableAutoDq}
-                        onChange={(e) => setNewTourneyEnableAutoDq(e.target.checked)}
-                        className="h-4 w-4 accent-amber-400"
-                      />
-                    </label>
-                  </div>
-
-                  <div className="p-3 rounded-lg border border-slate-800 bg-slate-900">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="font-semibold text-white">
-                        Tiempo Límite de Check-In
-                      </span>
-                      <span className="font-mono font-bold text-amber-400">
-                        {newTourneyCheckInTimeoutMinutes} min
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min={2}
-                      max={30}
-                      step={1}
-                      value={newTourneyCheckInTimeoutMinutes}
-                      onChange={(e) => setNewTourneyCheckInTimeoutMinutes(Number(e.target.value))}
-                      className="w-full accent-amber-400 cursor-pointer"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-slate-300 mb-1">
-                      Acción ante Descalificación Doble
-                    </label>
-                    <select
-                      value={newTourneyDoubleDqRule}
-                      onChange={(e) => setNewTourneyDoubleDqRule(e.target.value as DoubleDqRule)}
-                      className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white"
-                    >
-                      <option value="AUTO_BYE_NEXT_ROUND">
-                        AUTO_BYE_NEXT_ROUND (Pase directo BYE a siguiente ronda)
-                      </option>
-                      <option value="RANDOM_COIN_FLIP">
-                        RANDOM_COIN_FLIP (Coin Flip 2-0)
-                      </option>
-                      <option value="PAUSE_FOR_ADMIN">
-                        PAUSE_FOR_ADMIN (Alerta al panel del Árbitro/Admin)
-                      </option>
-                    </select>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex justify-between items-center gap-2 pt-3 border-t border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowCreateModal(false);
-                    setCreateWizardStep(1);
-                  }}
-                  className="px-4 py-2 rounded-lg border border-slate-700 text-xs text-slate-300"
-                >
-                  Cancelar
-                </button>
-
-                <div className="flex items-center gap-2">
-                  {createWizardStep === 2 && (
-                    <button
-                      type="button"
-                      onClick={() => setCreateWizardStep(1)}
-                      className="px-3.5 py-2 rounded-lg border border-slate-700 text-xs text-slate-200"
-                    >
-                      ← Paso 1
-                    </button>
-                  )}
-
-                  {createWizardStep === 1 ? (
-                    <button
-                      type="button"
-                      onClick={() => setCreateWizardStep(2)}
-                      className="px-4 py-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-xs font-semibold text-slate-950"
-                    >
-                      Siguiente: Check-In & DQ →
-                    </button>
-                  ) : (
-                    <button
-                      type="submit"
-                      className="px-4 py-2 rounded-lg text-xs font-semibold bg-sky-500 hover:bg-sky-400 text-slate-950"
-                    >
-                      Generar Torneo OBF
-                    </button>
-                  )}
-                </div>
-              </div>
-            </form>
-          </div>
-        )}
+        {/* MODAL INTEGRAL DE CREACIÓN DE TORNEO / MACRO EVENTO / CIRCUITO */}
+        <CreateTournamentModal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onSubmit={handleCreateTournament}
+          existingTournaments={tournamentList}
+          isSubmitting={isSubmittingCreate}
+        />
 
         {/* MODAL DE AUTENTICACIÓN OFICIAL */}
         <AuthDialogModal

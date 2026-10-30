@@ -13,7 +13,8 @@ export type TournamentFormat =
   | 'swiss'               // Sistema Suizo dinámico por historial idéntico sin revanchas
   | 'round_robin'         // Todos contra todos (Algoritmo de rotación poligonal de Berger)
   | 'free_for_all'        // Salas multi-jugador (4-8 por lobby) con avance Top N
-  | 'leaderboard';        // Clasificación continua por puntos o Time Trial
+  | 'leaderboard'         // Clasificación continua por puntos o Time Trial
+  | 'compass_draw';       // Cuadro de 8 puntos cardinales (Este, Norte, Oeste, Sur) - Garantiza 3 partidos sin eliminación temprana
 
 export type MatchState =
   | 'LOCKED'
@@ -343,6 +344,24 @@ export interface TournamentChatMessage {
   createdAt: string;
 }
 
+export type TournamentHierarchyLevel =
+  | 'CIRCUIT'      // Nivel 1: Circuito Mundial / Temporada 6 Meses (agrupa eventos y paradas quincenales)
+  | 'MACRO_EVENT'  // Nivel 2: Macro Evento Multi-Torneo / Parada (agrupa torneos por país o juegos)
+  | 'TOURNAMENT';  // Nivel 3: Torneo / Categoría Individual (cuadro directo OBF)
+
+export interface SubTournamentItem {
+  slug: string;
+  name: string;
+  gameSlug: string;
+  gameName: string;
+  format: TournamentFormat;
+  country?: string;
+  city?: string;
+  entrantsCount: number;
+  prizePool?: number;
+  status?: string;
+}
+
 export interface OBFEventMetadata {
   id: string;
   organizationSlug: string;
@@ -358,6 +377,18 @@ export interface OBFEventMetadata {
   venueFee: number;
   entryFee: number;
   prizePool: number;
+  // --- Jerarquía de 3 Niveles (Circuitos 6M, Macro Eventos & Sub-Torneos) ---
+  hierarchyLevel?: TournamentHierarchyLevel;
+  parentCircuitSlug?: string | null;
+  parentMacroEventSlug?: string | null;
+  subTournaments?: SubTournamentItem[];
+  city?: string;
+  country?: string;
+  venueName?: string;
+  streamUrl?: string;
+  meetUrl?: string;
+  paymentInstructions?: string;
+  treasuryQrCodeUrl?: string;
   // --- Reglas Graduables de Match Check-In y Descalificación Automática (DQ / Double DQ) ---
   enableMatchCheckIn?: boolean;
   matchCheckInTimeoutMinutes?: number; // Graduable de 2 a 30 minutos (por defecto: 5)
@@ -1826,6 +1857,44 @@ export function generateLeaderboardBracket(entrants: OBFEntrant[]): OBFSet[] {
   return sets;
 }
 
+/**
+ * 8. Compass Draw (Cuadro de 8 Puntos Cardinales: Este, Norte, Oeste, Sur)
+ * Garantiza un mínimo de 3 partidos a todos los participantes sin eliminación temprana.
+ */
+export function generateCompassDrawBracket(entrants: OBFEntrant[]): OBFSet[] {
+  const seeded = sortAndBalanceEntrants(entrants);
+  const ids = seeded.map((e) => e.entrantID);
+  while (ids.length < 8) ids.push(null as unknown as string);
+
+  return [
+    // Ronda 1: Cuadro Este (Cuartos de Final Iniciales)
+    createBaseSet('CP-E-R1-1', 'WINNERS', 1, 'Este R1 (Cuartos #1)', ids[0], ids[7], 'CP-E-SF1', 'CP-W-SF1', 'EST-01', true, [-12.0, 7.5, 1.2], 3, 1, 1),
+    createBaseSet('CP-E-R1-2', 'WINNERS', 1, 'Este R1 (Cuartos #2)', ids[3], ids[4], 'CP-E-SF1', 'CP-W-SF1', 'EST-02', false, [-12.0, 4.5, 1.2], 3, 2, 2),
+    createBaseSet('CP-E-R1-3', 'WINNERS', 1, 'Este R1 (Cuartos #3)', ids[1], ids[6], 'CP-E-SF2', 'CP-W-SF2', 'EST-03', false, [-12.0, 1.5, 1.2], 3, 1, 1),
+    createBaseSet('CP-E-R1-4', 'WINNERS', 1, 'Este R1 (Cuartos #4)', ids[2], ids[5], 'CP-E-SF2', 'CP-W-SF2', 'EST-04', false, [-12.0, -1.5, 1.2], 3, 2, 2),
+
+    // Semifinales Este (Ganadores R1)
+    createBaseSet('CP-E-SF1', 'WINNERS', 2, 'Este Semifinal A', null, null, 'CP-E-FIN', 'CP-N-FIN', 'EST-01', true, [-4.0, 6.0, 0.6], 3, 1, 1),
+    createBaseSet('CP-E-SF2', 'WINNERS', 2, 'Este Semifinal B', null, null, 'CP-E-FIN', 'CP-N-FIN', 'EST-02', false, [-4.0, 0.0, 0.6], 3, 2, 2),
+
+    // Final Este (Campeón 1° y 2° Puesto)
+    createBaseSet('CP-E-FIN', 'GRAND_FINAL', 3, 'Gran Final Este (1° y 2°)', null, null, null, null, 'STAGE-MAIN', true, [5.0, 3.0, 0.0], 5),
+
+    // Cuadro Norte (Perdedores Semis Este -> 3° y 4° Puesto)
+    createBaseSet('CP-N-FIN', 'SECOND_CHANCE', 3, 'Final Norte (3° y 4°)', null, null, null, null, 'EST-03', false, [5.0, 8.5, 0.8], 3),
+
+    // Cuadro Oeste (Perdedores R1 Este -> Semifinales Oeste)
+    createBaseSet('CP-W-SF1', 'LOSERS', 2, 'Oeste Semifinal A', null, null, 'CP-W-FIN', 'CP-S-FIN', 'EST-05', false, [-4.0, -5.5, -1.5], 3, 1, 1),
+    createBaseSet('CP-W-SF2', 'LOSERS', 2, 'Oeste Semifinal B', null, null, 'CP-W-FIN', 'CP-S-FIN', 'EST-06', false, [-4.0, -9.5, -1.5], 3, 2, 2),
+
+    // Final Oeste (5° y 6° Puesto)
+    createBaseSet('CP-W-FIN', 'LOSERS', 3, 'Final Oeste (5° y 6°)', null, null, null, null, 'EST-05', false, [5.0, -5.5, -1.5], 3),
+
+    // Final Sur (Perdedores Semis Oeste -> 7° y 8° Puesto)
+    createBaseSet('CP-S-FIN', 'LOSERS', 3, 'Final Sur (7° y 8°)', null, null, null, null, 'EST-06', false, [5.0, -10.5, -2.0], 3),
+  ];
+}
+
 export function generateSetsByFormat(format: TournamentFormat, entrants: OBFEntrant[]): OBFSet[] {
   switch (format) {
     case 'two_stage':
@@ -1842,6 +1911,8 @@ export function generateSetsByFormat(format: TournamentFormat, entrants: OBFEntr
       return generateFreeForAllBracket(entrants);
     case 'leaderboard':
       return generateLeaderboardBracket(entrants);
+    case 'compass_draw':
+      return generateCompassDrawBracket(entrants);
     default:
       return generateTwoStageBracket(entrants);
   }

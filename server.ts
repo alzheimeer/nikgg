@@ -29,6 +29,8 @@ import {
   type DoubleDqRule,
   type LosersBracketDqPenalty,
   type UserRole,
+  type TournamentHierarchyLevel,
+  type SubTournamentItem,
   applyInitial24Simulation,
   createInitialBracketChatMessage,
   generateSetsByFormat,
@@ -227,6 +229,19 @@ function createDefaultTournament(
     enableAutoDq?: boolean;
     doubleDqRule?: DoubleDqRule;
     losersBracketDqPenalty?: LosersBracketDqPenalty;
+  },
+  hierarchyMeta?: {
+    hierarchyLevel?: TournamentHierarchyLevel;
+    parentCircuitSlug?: string | null;
+    parentMacroEventSlug?: string | null;
+    subTournaments?: SubTournamentItem[];
+    city?: string;
+    country?: string;
+    venueName?: string;
+    streamUrl?: string;
+    meetUrl?: string;
+    entryFee?: number;
+    paymentInstructions?: string;
   }
 ): OBFDocument {
   const clonedEntrants = JSON.parse(JSON.stringify(entrants)) as OBFEntrant[];
@@ -247,8 +262,18 @@ function createDefaultTournament(
       numberEntrants: clonedEntrants.length,
       guaranteedMinMatches: 3,
       venueFee: 25,
-      entryFee: 25,
+      entryFee: hierarchyMeta?.entryFee ?? 25,
       prizePool,
+      hierarchyLevel: hierarchyMeta?.hierarchyLevel || 'TOURNAMENT',
+      parentCircuitSlug: hierarchyMeta?.parentCircuitSlug || null,
+      parentMacroEventSlug: hierarchyMeta?.parentMacroEventSlug || null,
+      subTournaments: hierarchyMeta?.subTournaments || [],
+      city: hierarchyMeta?.city || '',
+      country: hierarchyMeta?.country || '',
+      venueName: hierarchyMeta?.venueName || '',
+      streamUrl: hierarchyMeta?.streamUrl || '',
+      meetUrl: hierarchyMeta?.meetUrl || '',
+      paymentInstructions: hierarchyMeta?.paymentInstructions || '',
       enableMatchCheckIn: checkInConfig?.enableMatchCheckIn ?? true,
       matchCheckInTimeoutMinutes: Math.min(
         30,
@@ -415,13 +440,18 @@ function loadOrCreateDatabase(): PersistentDatabase {
     try {
       const raw = fs.readFileSync(DB_FILE, 'utf-8');
       const parsed = JSON.parse(raw) as PersistentDatabase;
-      if (parsed.schemaVersion === 3 && parsed.tournaments?.['nexus-tekken8-masters']?.entrants?.length === 24) {
+      if (parsed.schemaVersion === 4 && parsed.tournaments?.['nexus-tekken8-masters']?.entrants?.length === 24) {
         return parsed;
       }
       // Reconstruir cualquier torneo personalizado previo con la nueva topología dinámica
       if (parsed.tournaments) {
         for (const [slug, doc] of Object.entries(parsed.tournaments)) {
-          if (slug !== 'nexus-tekken8-masters' && slug !== 'capcom-pro-sf6-latam' && slug !== 'evo-ggst-champions') {
+          if (
+            slug !== 'nexus-tekken8-masters' &&
+            slug !== 'capcom-pro-sf6-latam' &&
+            slug !== 'evo-ggst-champions' &&
+            slug !== 'twt-world-tour-2026'
+          ) {
             preservedCustomTournaments[slug] = createDefaultTournament(
               slug,
               doc.event.name,
@@ -429,7 +459,19 @@ function loadOrCreateDatabase(): PersistentDatabase {
               doc.event.gameSlug,
               doc.event.format,
               doc.entrants,
-              doc.event.prizePool
+              doc.event.prizePool,
+              undefined,
+              {
+                hierarchyLevel: doc.event.hierarchyLevel,
+                parentMacroEventSlug: doc.event.parentMacroEventSlug,
+                parentCircuitSlug: doc.event.parentCircuitSlug,
+                subTournaments: doc.event.subTournaments,
+                city: doc.event.city,
+                country: doc.event.country,
+                venueName: doc.event.venueName,
+                streamUrl: doc.event.streamUrl,
+                meetUrl: doc.event.meetUrl,
+              }
             );
           }
         }
@@ -446,7 +488,17 @@ function loadOrCreateDatabase(): PersistentDatabase {
     'tekken8',
     'two_stage',
     INITIAL_24_ENTRANTS_TEKKEN,
-    50000
+    50000,
+    undefined,
+    {
+      hierarchyLevel: 'TOURNAMENT',
+      parentMacroEventSlug: 'twt-world-tour-2026',
+      city: 'Lima',
+      country: 'PE',
+      venueName: 'Nexus Esports Arena',
+      meetUrl: 'https://meet.google.com/nexus-twt-arena',
+      streamUrl: 'https://twitch.tv/tekken',
+    }
   );
 
   const t2 = createDefaultTournament(
@@ -456,7 +508,16 @@ function loadOrCreateDatabase(): PersistentDatabase {
     'sf6',
     'double_elimination',
     INITIAL_16_ENTRANTS_SF6,
-    30000
+    30000,
+    undefined,
+    {
+      hierarchyLevel: 'TOURNAMENT',
+      city: 'Bogotá',
+      country: 'CO',
+      venueName: 'Corferias Gaming Stage',
+      meetUrl: 'https://meet.google.com/capcom-pro-tour',
+      streamUrl: 'https://twitch.tv/capcomfighters',
+    }
   );
 
   const t3 = createDefaultTournament(
@@ -466,13 +527,173 @@ function loadOrCreateDatabase(): PersistentDatabase {
     'ggst',
     'single_elimination',
     INITIAL_12_ENTRANTS_GGST,
-    20000
+    20000,
+    undefined,
+    {
+      hierarchyLevel: 'TOURNAMENT',
+      city: 'Santiago',
+      country: 'CL',
+      venueName: 'Movistar Arena Chile',
+      streamUrl: 'https://twitch.tv/arcrevos',
+    }
+  );
+
+  // Sub-torneos por país para el Macro Evento Tekken World Tour
+  const subPeru = createDefaultTournament(
+    'twt-parada-peru',
+    'TWT Parada Perú Qualifier (Lima Masters)',
+    'Tekken 8',
+    'tekken8',
+    'two_stage',
+    INITIAL_24_ENTRANTS_TEKKEN.slice(0, 16),
+    10000,
+    undefined,
+    {
+      hierarchyLevel: 'TOURNAMENT',
+      parentMacroEventSlug: 'twt-world-tour-2026',
+      city: 'Lima',
+      country: 'PE',
+      venueName: 'Centro de Convenciones 28 de Julio',
+      meetUrl: 'https://meet.google.com/twt-peru-live',
+    }
+  );
+
+  const subColombia = createDefaultTournament(
+    'twt-parada-colombia',
+    'TWT Parada Colombia Masters (Bogotá Major)',
+    'Tekken 8',
+    'tekken8',
+    'double_elimination',
+    INITIAL_24_ENTRANTS_TEKKEN.slice(4, 20),
+    10000,
+    undefined,
+    {
+      hierarchyLevel: 'TOURNAMENT',
+      parentMacroEventSlug: 'twt-world-tour-2026',
+      city: 'Bogotá',
+      country: 'CO',
+      venueName: 'Ágora Bogotá FGC Stage',
+      meetUrl: 'https://meet.google.com/twt-colombia-live',
+    }
+  );
+
+  const subMexico = createDefaultTournament(
+    'twt-parada-mexico',
+    'TWT Parada México Open (CDMX Battle)',
+    'Tekken 8',
+    'tekken8',
+    'two_stage',
+    INITIAL_24_ENTRANTS_TEKKEN.slice(8, 24),
+    10000,
+    undefined,
+    {
+      hierarchyLevel: 'TOURNAMENT',
+      parentMacroEventSlug: 'twt-world-tour-2026',
+      city: 'CDMX',
+      country: 'MX',
+      venueName: 'World Trade Center México',
+      meetUrl: 'https://meet.google.com/twt-mexico-live',
+    }
+  );
+
+  const subChile = createDefaultTournament(
+    'twt-parada-chile',
+    'TWT Parada Chile Invitational (Santiago Climax)',
+    'Tekken 8',
+    'tekken8',
+    'double_elimination',
+    INITIAL_24_ENTRANTS_TEKKEN.slice(0, 16),
+    10000,
+    undefined,
+    {
+      hierarchyLevel: 'TOURNAMENT',
+      parentMacroEventSlug: 'twt-world-tour-2026',
+      city: 'Santiago',
+      country: 'CL',
+      venueName: 'Estadio Nacional Polideportivo',
+      meetUrl: 'https://meet.google.com/twt-chile-live',
+    }
+  );
+
+  // NIVEL 2: Macro Evento Multi-Torneo Contenedor
+  const macroTwt = createDefaultTournament(
+    'twt-world-tour-2026',
+    'Tekken World Tour 2026 — Master Series (Macro Evento Latam)',
+    'Tekken 8',
+    'tekken8',
+    'two_stage',
+    INITIAL_24_ENTRANTS_TEKKEN,
+    60000,
+    undefined,
+    {
+      hierarchyLevel: 'MACRO_EVENT',
+      city: 'Latam Continental',
+      country: 'GLOBAL',
+      venueName: 'Circuito Continental FGC',
+      streamUrl: 'https://twitch.tv/tekken',
+      meetUrl: 'https://meet.google.com/twt-master-arena',
+      subTournaments: [
+        {
+          slug: 'twt-parada-peru',
+          name: 'TWT Parada Perú Qualifier (Lima Masters)',
+          gameSlug: 'tekken8',
+          gameName: 'Tekken 8',
+          format: 'two_stage',
+          country: 'PE',
+          city: 'Lima',
+          entrantsCount: 16,
+          prizePool: 10000,
+          status: 'IN_PROGRESS',
+        },
+        {
+          slug: 'twt-parada-colombia',
+          name: 'TWT Parada Colombia Masters (Bogotá Major)',
+          gameSlug: 'tekken8',
+          gameName: 'Tekken 8',
+          format: 'double_elimination',
+          country: 'CO',
+          city: 'Bogotá',
+          entrantsCount: 16,
+          prizePool: 10000,
+          status: 'READY',
+        },
+        {
+          slug: 'twt-parada-mexico',
+          name: 'TWT Parada México Open (CDMX Battle)',
+          gameSlug: 'tekken8',
+          gameName: 'Tekken 8',
+          format: 'two_stage',
+          country: 'MX',
+          city: 'CDMX',
+          entrantsCount: 16,
+          prizePool: 10000,
+          status: 'READY',
+        },
+        {
+          slug: 'twt-parada-chile',
+          name: 'TWT Parada Chile Invitational (Santiago Climax)',
+          gameSlug: 'tekken8',
+          gameName: 'Tekken 8',
+          format: 'double_elimination',
+          country: 'CL',
+          city: 'Santiago',
+          entrantsCount: 16,
+          prizePool: 10000,
+          status: 'READY',
+        },
+      ],
+    }
   );
 
   const initialDb: PersistentDatabase = {
-    schemaVersion: 3,
+    schemaVersion: 4,
     activeTournamentSlug: 'nexus-tekken8-masters',
     tournaments: {
+      'twt-world-tour-2026': macroTwt,
+      'twt-parada-peru': subPeru,
+      'twt-parada-colombia': subColombia,
+      'twt-parada-mexico': subMexico,
+      'twt-parada-chile': subChile,
       'nexus-tekken8-masters': t1,
       'capcom-pro-sf6-latam': t2,
       'evo-ggst-champions': t3,
@@ -1258,6 +1479,16 @@ async function startServer() {
       enableAutoDq,
       doubleDqRule,
       losersBracketDqPenalty,
+      hierarchyLevel,
+      parentCircuitSlug,
+      parentMacroEventSlug,
+      venueCity,
+      country,
+      meetUrl,
+      streamUrl,
+      entryFee,
+      paymentInstructions,
+      subTournamentsList,
     } = req.body as {
       name: string;
       gameName: string;
@@ -1273,10 +1504,29 @@ async function startServer() {
       enableAutoDq?: boolean;
       doubleDqRule?: DoubleDqRule;
       losersBracketDqPenalty?: LosersBracketDqPenalty;
+      hierarchyLevel?: TournamentHierarchyLevel;
+      parentCircuitSlug?: string | null;
+      parentMacroEventSlug?: string | null;
+      venueCity?: string;
+      country?: string;
+      meetUrl?: string;
+      streamUrl?: string;
+      entryFee?: number;
+      paymentInstructions?: string;
+      subTournamentsList?: Array<{
+        name: string;
+        country?: string;
+        city?: string;
+        gameSlug?: string;
+        gameName?: string;
+        format?: TournamentFormat;
+        entrantCount?: number;
+        prizePool?: number;
+      }>;
     };
 
     const slug = `${(name || 'torneo-obf').toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now().toString(36).slice(-4)}`;
-    const count = Math.min(32, Math.max(4, Number(entrantCount) || 8));
+    const count = Math.min(3072, Math.max(4, Number(entrantCount) || 8));
 
     const basePool =
       gameSlug === 'sf6'
@@ -1284,7 +1534,7 @@ async function startServer() {
         : gameSlug === 'ggst'
         ? INITIAL_12_ENTRANTS_GGST
         : INITIAL_24_ENTRANTS_TEKKEN;
-    const generatedEntrants: OBFEntrant[] = Array.from({ length: count }, (_, idx) => {
+    const generatedEntrants: OBFEntrant[] = Array.from({ length: Math.min(count, 32) }, (_, idx) => {
       if (idx < basePool.length) {
         return { ...basePool[idx], entrantID: `P${idx + 1}`, initialSeed: idx + 1 };
       }
@@ -1300,6 +1550,86 @@ async function startServer() {
       };
     });
 
+    const createdSubTournamentSummaries: SubTournamentItem[] = [];
+
+    // Si es Macro Evento o Circuito y se proporcionaron sub-torneos, crearlos en el backend
+    if (hierarchyLevel !== 'TOURNAMENT' && Array.isArray(subTournamentsList) && subTournamentsList.length > 0) {
+      for (const sub of subTournamentsList) {
+        const subSlug = `${slug}-${(sub.country || 'sub').toLowerCase()}-${Math.random().toString(36).slice(2, 6)}`;
+        const subCount = Math.min(32, Math.max(4, Number(sub.entrantCount) || 16));
+        const subBase =
+          sub.gameSlug === 'sf6'
+            ? INITIAL_16_ENTRANTS_SF6
+            : sub.gameSlug === 'ggst'
+            ? INITIAL_12_ENTRANTS_GGST
+            : INITIAL_24_ENTRANTS_TEKKEN;
+
+        const subEntrants: OBFEntrant[] = Array.from({ length: subCount }, (_, idx) => {
+          if (idx < subBase.length) {
+            return {
+              ...subBase[idx],
+              entrantID: `P${idx + 1}`,
+              initialSeed: idx + 1,
+              country: sub.country || subBase[idx].country,
+            };
+          }
+          return {
+            entrantID: `P${idx + 1}`,
+            entrantTag: `${sub.country || 'FGC'}_Challenger_${idx + 1}`,
+            initialSeed: idx + 1,
+            eloRating: 1950 - idx * 15,
+            mainCharacter: subBase[idx % subBase.length].mainCharacter,
+            country: sub.country || 'PE',
+            teamName: `${sub.city || 'Regional'} Qualifier`,
+            checkedIn: true,
+          };
+        });
+
+        const childDoc = createDefaultTournament(
+          subSlug,
+          sub.name || `${name} — ${sub.country || 'Parada'}`,
+          sub.gameName || gameName || 'Tekken 8',
+          sub.gameSlug || gameSlug || 'tekken8',
+          sub.format || format || 'two_stage',
+          subEntrants,
+          Number(sub.prizePool) || Math.floor((Number(prizePool) || 15000) / subTournamentsList.length),
+          {
+            enableMatchCheckIn: enableMatchCheckIn ?? true,
+            matchCheckInTimeoutMinutes: Number(matchCheckInTimeoutMinutes) || 5,
+            enableAutoDq: enableAutoDq ?? true,
+            doubleDqRule: doubleDqRule || 'AUTO_BYE_NEXT_ROUND',
+            losersBracketDqPenalty: losersBracketDqPenalty || 'DROP_TO_LOSERS',
+          },
+          {
+            hierarchyLevel: 'TOURNAMENT',
+            parentMacroEventSlug: slug,
+            parentCircuitSlug: parentCircuitSlug || null,
+            city: sub.city || venueCity || '',
+            country: sub.country || country || '',
+            meetUrl: meetUrl || '',
+            streamUrl: streamUrl || '',
+            entryFee: Number(entryFee) || 0,
+            paymentInstructions: paymentInstructions || '',
+          }
+        );
+
+        db.tournaments[subSlug] = childDoc;
+        engines.set(subSlug, new OptimizedNikBracketEngine(childDoc));
+        createdSubTournamentSummaries.push({
+          slug: subSlug,
+          name: childDoc.event.name,
+          gameSlug: childDoc.event.gameSlug,
+          gameName: childDoc.event.gameName,
+          format: childDoc.event.format,
+          country: sub.country || country || '',
+          city: sub.city || venueCity || '',
+          entrantsCount: subEntrants.length,
+          prizePool: childDoc.event.prizePool,
+          status: 'READY',
+        });
+      }
+    }
+
     const newDoc = createDefaultTournament(
       slug,
       name || 'Nuevo Torneo Nexus OBF',
@@ -1314,6 +1644,18 @@ async function startServer() {
         enableAutoDq: enableAutoDq ?? true,
         doubleDqRule: doubleDqRule || 'AUTO_BYE_NEXT_ROUND',
         losersBracketDqPenalty: losersBracketDqPenalty || 'DROP_TO_LOSERS',
+      },
+      {
+        hierarchyLevel: hierarchyLevel || 'TOURNAMENT',
+        parentCircuitSlug: parentCircuitSlug || null,
+        parentMacroEventSlug: parentMacroEventSlug || null,
+        subTournaments: createdSubTournamentSummaries,
+        city: venueCity || '',
+        country: country || '',
+        streamUrl: streamUrl || '',
+        meetUrl: meetUrl || '',
+        entryFee: Number(entryFee) || 0,
+        paymentInstructions: paymentInstructions || '',
       }
     );
 
